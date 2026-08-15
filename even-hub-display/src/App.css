@@ -1,6 +1,6 @@
 /* Even Uber Display App - CSS for G2 AR Glasses */
 
-/* Color scheme: Green monochrome for micro-LED */
+/* Light Theme (Default) */
 :root {
   --primary-green: #00ff00;
   --dark-bg: #000000;
@@ -14,6 +14,19 @@
   --font-size-lg: 20px;
   --font-size-xl: 24px;
   --border-width: 2px;
+  --bg-surface: rgba(0, 255, 0, 0.05);
+}
+
+/* Dark Theme */
+:root[data-theme='dark'] {
+  --primary-green: #00ff00;
+  --dark-bg: #0a0a0a;
+  --border-color: #00ff00;
+  --accent-color: #00cc00;
+  --text-color: #00ff00;
+  --secondary-text: #00aa00;
+  --danger-color: #ff6600;
+  --bg-surface: rgba(0, 255, 0, 0.02);
 }
 
 * {
@@ -51,17 +64,77 @@ body {
 .app-header {
   padding: 8px;
   border-bottom: var(--border-width) solid var(--border-color);
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.app-header h1 {
+.header-content {
+  text-align: center;
+  flex: 1;
+}
+
+.header-content h1 {
   font-size: var(--font-size-lg);
   margin-bottom: 2px;
+  animation: slideInDown 0.5s ease-out;
 }
 
-.app-header p {
+.header-content p {
   font-size: 10px;
   color: var(--secondary-text);
+  margin: 0;
+}
+
+.header-status {
+  font-size: 1.2rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Navigation */
+.app-nav {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  background: var(--dark-bg);
+  overflow-x: auto;
+}
+
+.nav-btn {
+  padding: 6px 12px;
+  border: var(--border-width) solid var(--border-color);
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 255, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.nav-btn.active {
+  background: var(--border-color);
+  color: var(--dark-bg);
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
 }
 
 .app-main {
@@ -71,14 +144,70 @@ body {
   justify-content: center;
   padding: 8px;
   overflow: auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--secondary-text);
+  font-size: 14px;
 }
 
 .app-footer {
-  padding: 4px 8px;
+  padding: 8px;
   border-top: var(--border-width) solid var(--border-color);
+  background: var(--dark-bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 10px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.status-light {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+.status-light.connected {
+  background: #00ff00;
+}
+
+.status-light.disconnected {
+  background: #ff4444;
+  animation: pulse 0.5s infinite;
+}
+
+.last-update {
   color: var(--secondary-text);
-  text-align: center;
+  font-size: 9px;
 }
 
 .loading {

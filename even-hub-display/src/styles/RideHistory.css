@@ -1,0 +1,283 @@
+.ride-history {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.history-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #00ff00;
+}
+
+.clear-btn {
+  padding: 0.5rem 1rem;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  background: #ff0000;
+  transform: scale(1.05);
+}
+
+.history-date-group {
+  border: 1px solid #00ff00;
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(0, 255, 0, 0.05);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.date-header {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #00ff00;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+.rides-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.ride-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #00ff00;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.ride-item:hover {
+  background: rgba(0, 255, 0, 0.1);
+  transform: translateX(4px);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+}
+
+.ride-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  font-weight: bold;
+  color: #00ff00;
+  font-size: 0.8rem;
+  background: rgba(0, 255, 0, 0.1);
+  border-radius: 4px;
+}
+
+.ride-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.driver-section,
+.vehicle-section,
+.time-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.driver-name {
+  font-weight: 600;
+  color: #00ff00;
+  font-size: 0.95rem;
+}
+
+.driver-rating {
+  font-size: 0.8rem;
+  color: #00ff00;
+  opacity: 0.8;
+}
+
+.vehicle {
+  font-size: 0.85rem;
+  color: #00ff00;
+}
+
+.plate {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #00ff00;
+  opacity: 0.7;
+  background: rgba(0, 255, 0, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+.ride-time {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #00ff00;
+}
+
+.ride-time .label {
+  opacity: 0.6;
+  min-width: 50px;
+}
+
+.ride-duration {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #ffaa00;
+  font-weight: 600;
+}
+
+.ride-duration .label {
+  opacity: 0.8;
+}
+
+.ride-status {
+  font-size: 0.75rem;
+  color: #ffaa00;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.ride-badge {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(0, 255, 0, 0.1);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00ff00;
+  white-space: nowrap;
+}
+
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid #00ff00;
+  border-radius: 8px;
+}
+
+.stat {
+  text-align: center;
+  padding: 0.8rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #00ff00;
+  opacity: 0.7;
+  margin-bottom: 0.3rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #00ff00;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #00ff00;
+  opacity: 0.7;
+}
+
+.empty-history p:first-child {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-hint {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+/* Dark mode adjustments */
+:root[data-theme='dark'] .ride-history {
+  background: #000;
+}
+
+:root[data-theme='dark'] .history-date-group {
+  background: rgba(0, 255, 0, 0.03);
+}
+
+:root[data-theme='dark'] .ride-item {
+  background: rgba(0, 255, 0, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ride-info {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .ride-item {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .ride-number {
+    min-width: auto;
+  }
+
+  .history-stats {
+    grid-template-columns: 1fr;
+  }
+}
