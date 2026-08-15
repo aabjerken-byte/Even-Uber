@@ -100,14 +100,14 @@ jobs:
           cat build-report.md
 
       - name: Upload Build Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-report
           path: build-report.md
 
       - name: Upload Linter Report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: swiftlint-report
           path: swiftlint-report.json
