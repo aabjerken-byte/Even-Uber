@@ -1,5 +1,5 @@
 /**
- * RideData model matching the iOS companion app
+ * RideData model matching the iOS companion app + advanced features
  */
 export interface RideData {
   driverName: string
@@ -14,6 +14,25 @@ export interface RideData {
   requesterLat?: number
   requesterLng?: number
   timestamp: string
+  // Advanced features
+  driverPhone?: string
+  driverAvatar?: string
+  vehiclePhoto?: string
+  driverFullName?: string
+  totalRides?: number
+  acceptanceRate?: number
+  cancellationRate?: number
+}
+
+/**
+ * Chat message interface for driver communication
+ */
+export interface ChatMessage {
+  id: string
+  sender: 'driver' | 'user'
+  message: string
+  timestamp: Date
+  read: boolean
 }
 
 /**
