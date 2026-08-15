@@ -1,0 +1,35 @@
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Local settings
+appsettings.Development.json
+appsettings.Local.json
+
+# Credentials and secrets
+secrets/
+*.pem
+*.pfx
+*.p12
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Runtime
+.DS_Store
