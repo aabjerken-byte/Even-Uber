@@ -130,8 +130,10 @@ unchanged.
 - `RideStatus` (`enroute`/`arriving`/`arrived`/`completed`/`cancelled`) added to
   both the Swift and TypeScript models.
 - The parser previously required an ETA, so **"Your driver has arrived" was
-  discarded** — the one message that should end the display. Terminal updates
-  are now accepted without a name or ETA.
+  discarded** — the one message that should end the display. Transition updates
+  (arriving / arrived / completed / cancelled) are now accepted without a name
+  or ETA. The arriving case was itself missed by the first fix and caught in a
+  later review pass — "Your driver is arriving now" was still being dropped.
 - The server merges updates instead of replacing, so a bare arrival notice no
   longer blanks the driver card, and it ignores terminal updates that arrive
   with no ride in progress (otherwise a stray receipt raised a phantom card).
@@ -176,7 +178,7 @@ Xcode 26.6 / iOS 26.5 SDK / iPhone 17 Pro simulator.
 | Check | Result |
 |---|---|
 | `RideData` + `NotificationParser` compile (macOS SDK) | ✅ |
-| iOS build + tests against the iOS SDK | ✅ 21 pass |
+| iOS build + tests against the iOS SDK | ✅ 23 pass |
 | Swift `JSONEncoder` output matches the React `RideData` model | ✅ |
 | `EvenUberCompanion.xcodeproj` / `Info.plist` well-formed | ✅ `plutil -lint` |
 | All 10 sources + test target present in project | ✅ |
@@ -186,7 +188,7 @@ Xcode 26.6 / iOS 26.5 SDK / iPhone 17 Pro simulator.
 | Express server boots, all 5 endpoints respond | ✅ |
 | Swift-encoded JSON accepted by `POST /api/ride-update` | ✅ |
 | UI renders at 576×288 with live data, no console errors | ✅ |
-| Display unit tests (vitest) | ✅ 43 pass |
+| Display unit tests (vitest) | ✅ 45 pass |
 | Backend builds and tests (.NET 8) | ✅ 19 pass |
 | Backend payload accepted by the display, two-pin map renders | ✅ |
 | Glasses layer no-ops cleanly in a browser | ✅ |

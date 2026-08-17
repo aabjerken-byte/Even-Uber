@@ -18,9 +18,6 @@ enum RideStatus: String, Codable {
         case .enroute, .arriving: return false
         }
     }
-
-    /// Whether an ETA is meaningful for this status.
-    var expectsETA: Bool { self == .enroute || self == .arriving }
 }
 
 /// Data model for a ride notification parsed from Uber

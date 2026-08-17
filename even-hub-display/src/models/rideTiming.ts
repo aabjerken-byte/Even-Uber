@@ -47,6 +47,11 @@ function minutesSince(timestamp: string, now: number): number {
 export function computeEta(ride: RideData, now: number = Date.now()): EtaState {
   const status: RideStatus = ride.status ?? 'enroute'
 
+  if (status === 'arriving') {
+    // "Arriving now" outranks any leftover ETA a merge may have preserved —
+    // showing "3 MIN" while the car pulls up would contradict the message.
+    return { minutesRemaining: 0, label: 'ARRIVING', overdue: false }
+  }
   if (status === 'arrived') {
     return { minutesRemaining: 0, label: 'ARRIVED', overdue: false }
   }

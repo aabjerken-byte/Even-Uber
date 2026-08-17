@@ -45,10 +45,11 @@ app.post('/api/ride-update', (req: Request, res: Response) => {
   try {
     const incoming: RideData = req.body
 
-    // A terminal update legitimately arrives without a driver name — that's the
-    // whole point of it. Everything else must identify a driver.
-    const terminal = isTerminalStatus(incoming.status)
-    if (!terminal && (!incoming.driverName || incoming.etaMinutes === undefined)) {
+    // Transitions — "arriving now", "has arrived", "trip complete" — carry a
+    // status and often nothing else; that's their whole point. Only a plain
+    // en-route update must identify a driver and quote an ETA.
+    const transition = isTerminalStatus(incoming.status) || incoming.status === 'arriving'
+    if (!transition && (!incoming.driverName || incoming.etaMinutes === undefined)) {
       return res.status(400).json({
         status: 'error',
         error: 'Missing required fields: driverName, etaMinutes'
@@ -57,12 +58,12 @@ app.post('/api/ride-update', (req: Request, res: Response) => {
 
     const existing = activeRide()
 
-    // Terminal updates are transitions, not rides. Post-trip notifications
-    // ("your receipt is ready", "rate your trip") keep arriving long after a
-    // trip ends, and without this a stray receipt would raise a blank
-    // "TRIP COMPLETE" card on the glasses out of nowhere.
-    if (terminal && !existing && !incoming.driverName) {
-      console.log('↩️ Ignoring terminal update with no active ride')
+    // A transition modifies the ride on screen; it never starts one. Post-trip
+    // notifications ("your receipt is ready", "rate your trip") keep arriving
+    // long after a trip ends, and without this a stray receipt would raise a
+    // blank "TRIP COMPLETE" card on the glasses out of nowhere.
+    if (transition && !existing && !incoming.driverName) {
+      console.log('↩️ Ignoring transition update with no active ride')
       return res.json({
         status: 'ignored',
         message: 'No active ride to update'

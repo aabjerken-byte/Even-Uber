@@ -244,6 +244,27 @@ final class NotificationParserTests: XCTestCase {
         XCTAssertEqual(ride.etaMinutes, 0)
     }
 
+    /// Same class of message as the arrival notice: "arriving now" is the
+    /// signal to look up for the car, and it names nobody and quotes no ETA.
+    /// The first fix covered arrived/completed/cancelled but still dropped
+    /// this one — caught in review, pinned here.
+    func testBareArrivingNoticeIsAccepted() throws {
+        let ride = try XCTUnwrap(NotificationParser.parse(
+            title: "Uber",
+            body: "Your driver is arriving now"
+        ))
+        XCTAssertEqual(ride.status, .arriving)
+    }
+
+    func testArrivingWithNameButNoEtaIsAccepted() throws {
+        let ride = try XCTUnwrap(NotificationParser.parse(
+            title: "Uber",
+            body: "John is pulling up"
+        ))
+        XCTAssertEqual(ride.status, .arriving)
+        XCTAssertEqual(ride.driverName, "John")
+    }
+
     func testCancellationWithoutDriverNameIsAccepted() throws {
         let ride = try XCTUnwrap(NotificationParser.parse(
             title: "Uber",

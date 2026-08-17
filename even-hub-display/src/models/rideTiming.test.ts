@@ -74,6 +74,15 @@ describe('computeEta', () => {
     expect(computeEta(ride(), T0 + 3 * MINUTE).label).toBe('ARRIVING SOON')
     expect(computeEta(ride(), T0).label).toBe('ON THE WAY')
   })
+
+  it('lets "arriving" outrank a leftover ETA', () => {
+    // A bare "arriving now" merge preserves the previous etaMinutes; the
+    // status must win or the card says "3 MIN" while the car pulls up.
+    const state = computeEta(ride({ status: 'arriving', etaMinutes: 3 }), T0)
+    expect(state.label).toBe('ARRIVING')
+    expect(state.minutesRemaining).toBe(0)
+    expect(state.overdue).toBe(false)
+  })
 })
 
 describe('isRideStale', () => {
@@ -130,6 +139,25 @@ describe('mergeRide', () => {
     expect(merged.vehicleMake).toBe('Toyota')
     expect(merged.licensePlate).toBe('ABC123')
     expect(merged.driverRating).toBe(4.9)
+  })
+
+  it('keeps driver details when a bare arriving notice comes in', () => {
+    const arriving: RideData = {
+      status: 'arriving',
+      driverName: '',
+      driverRating: 0,
+      vehicleMake: '',
+      vehicleModel: '',
+      vehicleColor: '',
+      licensePlate: '',
+      etaMinutes: 0,
+      timestamp: new Date(T0 + 2 * MINUTE).toISOString()
+    }
+
+    const merged = mergeRide(ride(), arriving)
+    expect(merged.status).toBe('arriving')
+    expect(merged.driverName).toBe('John D.')
+    expect(merged.licensePlate).toBe('ABC123')
   })
 
   it('takes newer values when they are present', () => {

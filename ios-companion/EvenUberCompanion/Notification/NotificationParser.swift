@@ -55,16 +55,16 @@ enum NotificationParser {
         let licensePlate = extractLicensePlate(from: fullText)
         let etaMinutes = extractETA(from: fullText)
 
-        // While the driver is still coming we need a name and an ETA, or the
-        // card has nothing to say.
+        // Only a plain en-route update needs a name and an ETA — without them
+        // that card has nothing to say.
         //
-        // Terminal updates are held to a lower bar on purpose: "Your driver has
-        // arrived" names nobody and quotes no ETA, yet it is the single most
-        // important message in the whole stream — it's what takes the card off
-        // the glasses. Requiring a name here used to drop it on the floor. The
-        // display merges these onto the ride already on screen, so the driver
-        // details survive.
-        if status.expectsETA {
+        // Every transition is held to a lower bar on purpose: "Your driver is
+        // arriving now" and "Your driver has arrived" name nobody and quote no
+        // ETA, yet they are the most important messages in the stream — one
+        // tells the user to look up, the other takes the card off the glasses.
+        // Requiring a name here used to drop both. The display merges these
+        // onto the ride already on screen, so the driver details survive.
+        if status == .enroute {
             guard !driverName.isEmpty, etaMinutes > 0 else {
                 print("⚠️ Failed to parse notification: en-route ride missing name or ETA")
                 print("   Title: \(title)")
@@ -134,13 +134,33 @@ enum NotificationParser {
 
         for pattern in patterns {
             for candidate in allCaptures(of: pattern, in: text) {
-                let name = candidate.trimmingCharacters(in: .whitespaces)
-                guard !name.isEmpty, !isStopword(name) else { continue }
+                // Strip leading boilerplate rather than rejecting the whole
+                // candidate: the two-token pattern greedily matches "Uber John"
+                // in "Uber John is pulling up", and discarding it outright
+                // would lose "John" — the regex has already consumed it, so no
+                // later match gets another look.
+                let name = strippingLeadingStopwords(candidate)
+                guard !name.isEmpty else { continue }
                 return name
             }
         }
 
         return ""
+    }
+
+    /// Drop leading stopword tokens ("Uber John" → "John"); empty when nothing
+    /// name-like survives ("Your Uber" → "").
+    private static func strippingLeadingStopwords(_ candidate: String) -> String {
+        var tokens = candidate
+            .trimmingCharacters(in: .whitespaces)
+            .split(separator: " ")
+            .map(String.init)
+
+        while let first = tokens.first, nameStopwords.contains(first.lowercased()) {
+            tokens.removeFirst()
+        }
+
+        return tokens.joined(separator: " ")
     }
 
     /// Extract driver rating from notification text.

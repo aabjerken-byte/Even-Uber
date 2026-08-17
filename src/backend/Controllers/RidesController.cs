@@ -133,6 +133,11 @@ public class RidesController : ControllerBase
         {
             return NotFound();
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            _logger.LogError("Uber API authentication failed: {Message}", ex.Message);
+            return Unauthorized("Uber API authentication failed");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error publishing ride {RideId}", rideId);
