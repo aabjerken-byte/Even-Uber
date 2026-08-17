@@ -58,4 +58,28 @@ struct RideData: Codable {
         self.requesterLng = requesterLng
         self.timestamp = timestamp
     }
+
+    /// Copy of this ride with the requester's coordinates attached.
+    ///
+    /// The parser produces rides without any location — notification text
+    /// carries none — so the listener enriches the result from `LocationProvider`
+    /// before sending it on to the display.
+    func withRequesterLocation(latitude: Double?, longitude: Double?) -> RideData {
+        guard let latitude, let longitude else { return self }
+
+        return RideData(
+            driverName: driverName,
+            driverRating: driverRating,
+            vehicleMake: vehicleMake,
+            vehicleModel: vehicleModel,
+            vehicleColor: vehicleColor,
+            licensePlate: licensePlate,
+            etaMinutes: etaMinutes,
+            driverLat: driverLat,
+            driverLng: driverLng,
+            requesterLat: latitude,
+            requesterLng: longitude,
+            timestamp: timestamp
+        )
+    }
 }

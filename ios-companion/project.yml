@@ -89,6 +89,12 @@ targets:
         NSUserNotificationUsageDescription: >-
           We need to read Uber notifications to show your driver on your glasses.
 
+        # Your position is what the Even Hub map is drawn around. It is sent
+        # only to the Even Hub display app on your own network.
+        NSLocationWhenInUseUsageDescription: >-
+          Even Uber uses your location to place you on the pickup map shown on
+          your G2 glasses.
+
   EvenUberCompanionTests:
     type: bundle.unit-test
     platform: iOS

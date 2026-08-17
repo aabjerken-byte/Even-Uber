@@ -54,9 +54,27 @@ Uber:
   delivered to this app, including local notifications you schedule yourself.
 - `EvenHubClient` posts the parsed `RideData` to the Even Hub display app.
 
+- `LocationProvider` supplies the requester's own coordinates from CoreLocation,
+  so the map on the glasses has a real anchor.
+
 So the pipeline from *notification text → parsed ride → display on G2* is
 complete and testable end to end. Only the first hop — getting Uber's text into
 this app — is blocked.
+
+### One field the notification route can never fill
+
+The **driver's** coordinates. Uber's notification text carries no position, so
+`driverLat`/`driverLng` stay nil on this path no matter how good the parser is.
+
+The display deals with this honestly rather than faking a pin: given only your
+position it draws you at the centre with a dashed ring at the distance implied
+by the ETA, captioned *"Range estimated from ETA · exact position unavailable"*.
+A guessed driver marker on a heads-up display would be worse than admitting the
+gap — you'd be looking at a confident arrow pointing the wrong way.
+
+Real driver coordinates require the Uber API. When they arrive, the same
+component switches to plotting both pins with the true great-circle distance —
+no display work needed.
 
 You can exercise the whole chain today by scheduling a local notification:
 

@@ -7,17 +7,16 @@
 
 ## Summary
 
-The macOS-side work that Phase 1 deferred is done: the Xcode project exists, the
-Swift sources compile-check cleanly, the parser is unit tested, and the Even Hub
-display app runs end to end. Two things need flagging up front:
+The macOS-side work that Phase 1 deferred is done. The Xcode project exists, the
+app builds and its tests pass against the iOS SDK, and the whole chain —
+notification → parse → relay → render, map included — has been run end to end on
+the simulator and in CI.
 
-1. **The iOS build has not been run against the iOS SDK yet.** Xcode.app was not
-   installed on the machine that did this work — only Command Line Tools, which
-   ship no iOS SDK or simulators. CI now performs a real `xcodebuild` +
-   `xcodebuild test`, so the first push verifies it.
-2. **The notification-interception design cannot work on iOS.** No public API
-   lets one app read another app's notifications. See
-   [`ios-companion/NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md).
+One thing still needs flagging: **the notification-interception design cannot
+work on iOS.** No public API lets one app read another app's notifications, so
+the companion app cannot observe the official Uber app. The parser, relay,
+location and display all work and are reusable; only that first hop is blocked.
+See [`ios-companion/NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md).
 
 ---
 
@@ -85,6 +84,30 @@ non-ride notifications.
 simulator. It also picks the newest available iPhone runtime dynamically rather
 than pinning an Xcode version that breaks when GitHub rotates runner images.
 
+### Map now works
+
+The map rendered "Location data unavailable" on every real ride, because
+notification text carries no coordinates and nothing else supplied any.
+
+- **iOS**: new `LocationProvider` (CoreLocation) supplies the requester's real
+  position; `UberNotificationListener` attaches it to every parsed ride via
+  `RideData.withRequesterLocation(latitude:longitude:)`. Added
+  `NSLocationWhenInUseUsageDescription`, and a Location row in the app UI.
+- **Display**: `LocationMap` now renders three states — both pins, requester
+  only (you at centre plus an ETA-derived range ring, explicitly labelled an
+  estimate), or nothing. It deliberately does **not** draw a guessed driver pin.
+- **Distance maths**: the old code treated a degree of longitude as equal to a
+  degree of latitude, overstating east-west distance by ~21% at San Francisco's
+  latitude. Replaced with haversine, validated against references (1° latitude =
+  69.09 mi; 1° longitude at 60°N = exactly half the equatorial value). The
+  project's own mock coordinates went from a reported "0.1 mi" to the correct
+  459 ft.
+- **Zero-coordinate bug**: `driverLat && driverLng && …` treated a valid
+  coordinate of `0` as absent. Now an explicit finite-number check.
+
+The driver's own coordinates still require the Uber API path — see
+[`NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md).
+
 ### Even Hub display app fixes
 
 Three defects blocked the documented workflow:
@@ -105,6 +128,8 @@ Three defects blocked the documented workflow:
 
 ## Verified on macOS
 
+Xcode 26.6 / iOS 26.5 SDK / iPhone 17 Pro simulator.
+
 | Check | Result |
 |---|---|
 | `RideData` + `NotificationParser` compile (macOS SDK) | ✅ |
@@ -113,35 +138,33 @@ Three defects blocked the documented workflow:
 | `EvenUberCompanion.xcodeproj` / `Info.plist` well-formed | ✅ `plutil -lint` |
 | All 10 sources + test target present in project | ✅ |
 | React app type-check (`tsc --noEmit`) | ✅ |
-| React production build | ✅ 155 kB JS / 13.5 kB CSS |
+| React production build | ✅ |
+| Haversine distance vs known references | ✅ |
 | Express server boots, all 5 endpoints respond | ✅ |
 | Swift-encoded JSON accepted by `POST /api/ride-update` | ✅ |
 | UI renders at 576×288 with live data, no console errors | ✅ |
 
 ## Not yet verified
 
-Requires Xcode.app, which was not installed:
-
-- iOS compile against the iOS SDK
-- `xcodebuild test` execution
-- Simulator and device runs
+- Physical device run (simulator verified)
 - G2 hardware
 
-CI covers the first two on the next push.
+Everything else is verified locally on Xcode 26.6 / iOS 26.5 SDK and in CI.
 
 ---
 
 ## Next steps
 
-1. **Install Xcode**, then `sudo xcodebuild -license accept`, then open
-   `ios-companion/EvenUberCompanion.xcodeproj` and press ⌘U. Or push and let CI
-   do it.
-2. **Decide the data source.** The notification route is a demo harness, not a
-   production path. `src/backend/` already scaffolds Uber OAuth — confirm what
-   ride scopes your Uber developer account can actually access before investing
-   further either way.
-3. **Device test** the parse → relay → display chain using
-   `xcrun simctl push` or a local notification (see `XCODE_SETUP.md`).
+1. **Decide the data source.** The notification route is a demo harness, not a
+   production path, and it can never supply driver coordinates. `src/backend/`
+   already scaffolds Uber OAuth — confirm what ride scopes your Uber developer
+   account can actually access before investing further either way.
+2. **Device test** on a physical iPhone. Set a signing team, and point
+   `EvenHubClient` at your Mac's LAN address — `127.0.0.1` on the phone is the
+   phone (see `XCODE_SETUP.md`).
+3. **Wire driver coordinates** from the backend into `POST /api/ride-update`.
+   `LocationMap` already switches to the two-pin view the moment
+   `driverLat`/`driverLng` arrive — no display work needed.
 4. **Package for G2**: `npm run build`, then `evenhub pack`.
 
 ---
@@ -160,13 +183,16 @@ CI covers the first two on the next push.
 - [x] Xcode project exists and is committed
 - [x] Sources type-check
 - [x] Parser unit tested
-- [ ] Compiles against the iOS SDK *(CI, next push)*
-- [ ] Runs on an iOS 16+ device
-- [ ] Relays a parsed ride to Even Hub from a device
+- [x] Compiles against the iOS SDK
+- [x] Runs in the iOS simulator
+- [x] Relays a parsed ride to Even Hub, with real coordinates attached
+- [ ] Runs on a physical iOS 16+ device
 
 ### Integration
 - [x] Swift-encoded payload accepted by the display server
-- [ ] End-to-end on device
+- [x] End-to-end: pushed notification → parsed → relayed → rendered on the display
+- [x] Map renders with a real position
+- [ ] End-to-end on a physical device
 - [ ] G2 glasses display
 
 Blocked by design, not by effort:

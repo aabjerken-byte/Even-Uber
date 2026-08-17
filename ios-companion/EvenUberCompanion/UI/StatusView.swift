@@ -4,6 +4,7 @@ import UIKit
 struct StatusView: View {
     @ObservedObject var permissionManager: NotificationPermissions
     @ObservedObject var listener: UberNotificationListener
+    @ObservedObject var locationProvider: LocationProvider = .shared
     @State private var isCheckingConnection = false
 
     var body: some View {
@@ -18,6 +19,25 @@ struct StatusView: View {
                             .fontWeight(.semibold)
                     }
                     Text(permissionManager.isAuthorized ? "Authorized" : "Not authorized")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            .padding()
+            .background(Color(uiColor: .systemGray6))
+            .cornerRadius(8)
+
+            // Location Status — this is what anchors the map on the glasses
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: locationProvider.isAuthorized ? "location.fill" : "location.slash")
+                            .foregroundColor(locationProvider.isAuthorized ? .green : .red)
+                        Text("Location")
+                            .fontWeight(.semibold)
+                    }
+                    Text(locationStatusText)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -75,6 +95,16 @@ struct StatusView: View {
             .cornerRadius(8)
         }
         .task { checkConnection() }
+    }
+
+    private var locationStatusText: String {
+        guard locationProvider.isAuthorized else {
+            return "Not authorized — map will show ETA range only"
+        }
+        guard let coordinate = locationProvider.lastKnownLocation else {
+            return "Authorized — acquiring position…"
+        }
+        return String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
     }
 
     private func step(_ number: Int, _ text: String) -> some View {

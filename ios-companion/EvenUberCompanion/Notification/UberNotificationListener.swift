@@ -55,15 +55,28 @@ final class UberNotificationListener: NSObject, ObservableObject, UNUserNotifica
     /// Parse and relay an already-received notification. Exposed for testing
     /// and for the in-app "send a sample ride" debug action.
     func handle(title: String, body: String) {
-        guard let rideData = NotificationParser.parse(title: title, body: body) else {
+        guard let parsed = NotificationParser.parse(title: title, body: body) else {
             report(error: "Failed to parse Uber notification")
             return
         }
+
+        // Notification text carries no coordinates, so attach our own position
+        // here — without it the display has nothing to draw a map around.
+        let coordinate = LocationProvider.shared.currentCoordinate()
+        let rideData = parsed.withRequesterLocation(
+            latitude: coordinate?.latitude,
+            longitude: coordinate?.longitude
+        )
 
         print("✅ Parsed Uber notification successfully")
         print("   Driver: \(rideData.driverName)")
         print("   ETA: \(rideData.etaMinutes) minutes")
         print("   Vehicle: \(rideData.vehicleColor) \(rideData.vehicleMake) \(rideData.vehicleModel)")
+        if let coordinate {
+            print("   Location: \(coordinate.latitude), \(coordinate.longitude)")
+        } else {
+            print("   Location: unavailable — map will show ETA range only")
+        }
 
         client.send(rideData) { [weak self] result in
             DispatchQueue.main.async {

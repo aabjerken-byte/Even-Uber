@@ -28,6 +28,7 @@ export default function RideCard({ data }: RideCardProps) {
         driverLng={data.driverLng}
         requesterLat={data.requesterLat}
         requesterLng={data.requesterLng}
+        etaMinutes={data.etaMinutes}
       />
     </div>
   )

@@ -4,6 +4,7 @@ import UIKit
 struct ContentView: View {
     @ObservedObject var permissionManager: NotificationPermissions
     @ObservedObject var listener: UberNotificationListener
+    @ObservedObject var locationProvider: LocationProvider = .shared
     @State private var showingError = false
 
     var body: some View {
@@ -28,11 +29,16 @@ struct ContentView: View {
                         errorBanner(error)
                     }
 
-                    if !permissionManager.isAuthorized {
+                    if !permissionManager.isAuthorized || !locationProvider.isAuthorized {
                         Button {
-                            permissionManager.requestPermission { _ in }
+                            // Ask for notifications first, then location, so the
+                            // two system prompts appear in sequence rather than
+                            // one landing behind the other.
+                            permissionManager.requestPermission { _ in
+                                locationProvider.requestPermission()
+                            }
                         } label: {
-                            Label("Enable Notifications", systemImage: "bell.badge.fill")
+                            Label("Enable Notifications & Location", systemImage: "bell.badge.fill")
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .background(Color.blue)

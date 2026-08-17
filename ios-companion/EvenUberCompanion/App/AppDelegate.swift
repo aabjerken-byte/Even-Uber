@@ -16,6 +16,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // Refresh the cached permission state for the UI.
         NotificationPermissions.shared.checkAuthorizationStatus()
 
+        // Resume location updates if the user already granted access. We don't
+        // *request* here — stacking two system prompts on first launch is poor
+        // UX, so the ask is attached to the explicit buttons in the UI.
+        LocationProvider.shared.startUpdatingIfAuthorized()
+
         print("🚀 Even Uber Companion App started")
 
         return true

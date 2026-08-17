@@ -40,6 +40,8 @@ ios-companion/
 │   ├── Notification/
 │   │   ├── UberNotificationListener.swift  # UNUserNotificationCenterDelegate
 │   │   └── NotificationParser.swift        # Text → RideData
+│   ├── Location/
+│   │   └── LocationProvider.swift       # CoreLocation → requester coordinates
 │   ├── Network/
 │   │   └── EvenHubClient.swift          # HTTP POST to the display app
 │   ├── Permissions/
@@ -60,11 +62,29 @@ ios-companion/
 notification text
       ↓  NotificationParser.parse(title:body:)
    RideData?
+      ↓  .withRequesterLocation(...)   ← LocationProvider (CoreLocation)
+   RideData
       ↓  EvenHubClient.send(_:completion:)
 POST http://127.0.0.1:3000/api/ride-update
       ↓
 Even Hub display app → G2 glasses
 ```
+
+### LocationProvider
+
+Notification text contains no coordinates, so the map would have nothing to
+anchor on. `LocationProvider` supplies the *requester's* position from
+CoreLocation, and the listener attaches it to every parsed ride.
+
+The **driver's** position still cannot come from a notification. The display
+handles that honestly: with your position alone it draws you at the centre plus
+a range ring derived from the ETA, labelled as an estimate. It does not invent a
+driver pin. Real driver coordinates only arrive via the Uber API path in
+`src/backend/`.
+
+Accuracy is set to 100 m with a 50 m distance filter, which lets iOS use
+wifi/cell positioning rather than waking the GPS chip — enough to place a
+pickup pin while staying inside the project's battery target.
 
 ### NotificationParser
 

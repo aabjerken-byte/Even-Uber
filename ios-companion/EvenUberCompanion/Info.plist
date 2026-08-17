@@ -27,6 +27,8 @@
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Even Uber connects to the Even Hub display app running on your local network to show ride details on your G2 glasses.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Even Uber uses your location to place you on the pickup map shown on your G2 glasses.</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>We need to read Uber notifications to show your driver on your glasses.</string>
 	<key>UILaunchScreen</key>
