@@ -21,7 +21,7 @@ You now have **automated iOS builds** running on GitHub's macOS servers. You can
 
 ### 1. Go to GitHub Actions
 ```
-https://github.com/aabjerken-byte/Executive-Whisperer/actions
+https://github.com/aabjerken-byte/Even-Uber/actions
 ```
 
 ### 2. Click "Build iOS Companion App"
@@ -206,7 +206,7 @@ Borrow, rent, or use cloud Mac service:
 - GitHub Actions builds automatically
 
 ### Option 3: Monitor GitHub Actions (Now)
-1. Go to: https://github.com/aabjerken-byte/Executive-Whisperer/actions
+1. Go to: https://github.com/aabjerken-byte/Even-Uber/actions
 2. Bookmark the page
 3. Watch builds complete
 4. Download artifacts

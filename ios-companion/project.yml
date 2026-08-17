@@ -1,0 +1,128 @@
+# XcodeGen spec for the Even Uber iOS companion app.
+#
+# EvenUberCompanion.xcodeproj is committed, so you can just open it. Regenerate
+# it after adding files or changing settings with:
+#
+#     brew install xcodegen
+#     cd ios-companion && xcodegen generate
+
+name: EvenUberCompanion
+
+options:
+  bundleIdPrefix: com.evenuber
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+  groupSortPosition: top
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Automatic
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+  configs:
+    Debug:
+      ENABLE_TESTABILITY: YES
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+    Release:
+      ENABLE_TESTABILITY: NO
+
+targets:
+  EvenUberCompanion:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+
+    sources:
+      - path: EvenUberCompanion
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.evenuber.companion
+        PRODUCT_NAME: EvenUberCompanion
+        INFOPLIST_KEY_CFBundleDisplayName: Even Uber
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # No signing team is committed — Xcode fills this in from your Apple ID
+        # the first time you open Signing & Capabilities.
+        DEVELOPMENT_TEAM: ""
+
+    info:
+      path: EvenUberCompanion/Info.plist
+      properties:
+        CFBundleDisplayName: Even Uber
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+
+        # The companion app talks to the Even Hub display server over plain
+        # HTTP on the loopback/LAN address. App Transport Security blocks
+        # cleartext by default, so local networking has to be opted into
+        # explicitly. This is narrower than NSAllowsArbitraryLoads: it permits
+        # local/private-range hosts only, not the public internet.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+
+        # Required since iOS 14 whenever the app reaches a LAN address, e.g.
+        # when EvenHubClient is pointed at a Mac running the display app.
+        NSLocalNetworkUsageDescription: >-
+          Even Uber connects to the Even Hub display app running on your local
+          network to show ride details on your G2 glasses.
+
+        NSUserNotificationUsageDescription: >-
+          We need to read Uber notifications to show your driver on your glasses.
+
+  EvenUberCompanionTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "16.0"
+
+    sources:
+      - path: EvenUberCompanionTests
+
+    dependencies:
+      - target: EvenUberCompanion
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.evenuber.companion.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/EvenUberCompanion.app/EvenUberCompanion
+        BUNDLE_LOADER: $(TEST_HOST)
+
+schemes:
+  EvenUberCompanion:
+    build:
+      targets:
+        EvenUberCompanion: all
+        EvenUberCompanionTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - EvenUberCompanionTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
