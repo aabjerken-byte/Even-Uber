@@ -48,23 +48,33 @@ enum NotificationParser {
     static func parse(title: String, body: String) -> RideData? {
         let fullText = "\(title) \(body)"
 
+        let status = extractStatus(from: fullText)
         let driverName = extractDriverName(from: fullText)
         let driverRating = extractDriverRating(from: fullText)
         let vehicleInfo = extractVehicleInfo(from: fullText)
         let licensePlate = extractLicensePlate(from: fullText)
         let etaMinutes = extractETA(from: fullText)
 
-        // A ride card without a driver or an ETA has nothing useful to show on
-        // the glasses, so treat that as a parse failure rather than emitting a
-        // half-empty card.
-        guard !driverName.isEmpty, etaMinutes > 0 else {
-            print("⚠️ Failed to parse notification: missing critical fields")
-            print("   Title: \(title)")
-            print("   Body: \(body)")
-            return nil
+        // While the driver is still coming we need a name and an ETA, or the
+        // card has nothing to say.
+        //
+        // Terminal updates are held to a lower bar on purpose: "Your driver has
+        // arrived" names nobody and quotes no ETA, yet it is the single most
+        // important message in the whole stream — it's what takes the card off
+        // the glasses. Requiring a name here used to drop it on the floor. The
+        // display merges these onto the ride already on screen, so the driver
+        // details survive.
+        if status.expectsETA {
+            guard !driverName.isEmpty, etaMinutes > 0 else {
+                print("⚠️ Failed to parse notification: en-route ride missing name or ETA")
+                print("   Title: \(title)")
+                print("   Body: \(body)")
+                return nil
+            }
         }
 
         return RideData(
+            status: status,
             driverName: driverName,
             driverRating: driverRating,
             vehicleMake: vehicleInfo.make,
@@ -74,6 +84,30 @@ enum NotificationParser {
             etaMinutes: etaMinutes,
             timestamp: Date()
         )
+    }
+
+    /// Classify the ride's lifecycle stage from the notification wording.
+    ///
+    /// Checked most-terminal-first: a cancellation mentioning an ETA is still a
+    /// cancellation.
+    static func extractStatus(from text: String) -> RideStatus {
+        let haystack = text.lowercased()
+
+        let cancelled = ["cancelled", "canceled", "trip was called off"]
+        let completed = ["trip is complete", "trip complete", "trip completed",
+                         "you've arrived", "you have arrived", "thanks for riding",
+                         "rate your trip", "rate your driver", "trip receipt",
+                         "how was your trip", "trip summary"]
+        let arrived = ["has arrived", "is here", "is waiting", "arrived at",
+                       "your driver is outside", "meet your driver outside"]
+        let arriving = ["is arriving now", "arriving now", "is pulling up",
+                        "pulling up", "is almost there"]
+
+        if cancelled.contains(where: haystack.contains) { return .cancelled }
+        if completed.contains(where: haystack.contains) { return .completed }
+        if arrived.contains(where: haystack.contains) { return .arrived }
+        if arriving.contains(where: haystack.contains) { return .arriving }
+        return .enroute
     }
 
     // MARK: - Extraction Methods

@@ -1,0 +1,48 @@
+name: Build Even Hub Display
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'even-hub-display/**'
+      - '.github/workflows/display-build.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'even-hub-display/**'
+  workflow_dispatch:
+
+concurrency:
+  group: display-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Type-check, test and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: even-hub-display
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # `npm ci` needs a committed lockfile; package-lock.json is currently in
+      # .gitignore. Committing it would make these builds reproducible.
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type-check app and server
+        run: npm run type-check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npx vite build

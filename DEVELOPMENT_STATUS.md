@@ -108,6 +108,49 @@ notification text carries no coordinates and nothing else supplied any.
 The driver's own coordinates still require the Uber API path — see
 [`NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md).
 
+### Glasses rendering implemented
+
+`@evenrealities/even_hub_sdk` was a dependency that nothing imported, so step 8
+of the data flow — "Even Hub SDK renders to G2 micro-LED" — did not exist. The
+display rendered to a browser and nothing reached the glasses.
+
+It also could not have worked the way the docs described. The SDK is a WebView
+bridge with an explicit container API; there is no HTML/CSS path to the panel.
+New `even-hub-display/src/glasses/` implements it: bridge acquisition, a
+validated six-container layout, incremental text updates, and canvas
+rasterisation for the map. See
+[`GLASSES_RENDERING.md`](even-hub-display/GLASSES_RENDERING.md), including two
+details that still need a real device to confirm.
+
+Outside the Even App WebView the whole layer no-ops, so browser development is
+unchanged.
+
+### Ride lifecycle and honest ETA
+
+- `RideStatus` (`enroute`/`arriving`/`arrived`/`completed`/`cancelled`) added to
+  both the Swift and TypeScript models.
+- The parser previously required an ETA, so **"Your driver has arrived" was
+  discarded** — the one message that should end the display. Terminal updates
+  are now accepted without a name or ETA.
+- The server merges updates instead of replacing, so a bare arrival notice no
+  longer blanks the driver card, and it ignores terminal updates that arrive
+  with no ride in progress (otherwise a stray receipt raised a phantom card).
+- `ETADisplay` decremented a local `setInterval` counter, so after the first
+  notification the number on the glasses was **invented by a timer**. It is now
+  derived from the ride's timestamp and degrades to "ETA UNKNOWN" past a grace
+  period.
+- Rides now expire: 15 minutes for en-route, 60 seconds after a terminal state.
+
+### Backend wired to the display
+
+`src/backend` was orphaned — nothing referenced it and CI never built it. It now
+maps Uber's nested, snake_case model onto the display's flat payload
+(`EvenHubRideUpdate`) and posts to the same `/api/ride-update` endpoint the iOS
+app uses, making backend and phone interchangeable producers. Added
+`POST /api/rides/{rideId}/publish`, plus a test project.
+
+This is the only path that can carry driver coordinates.
+
 ### Even Hub display app fixes
 
 Three defects blocked the documented workflow:
@@ -133,7 +176,7 @@ Xcode 26.6 / iOS 26.5 SDK / iPhone 17 Pro simulator.
 | Check | Result |
 |---|---|
 | `RideData` + `NotificationParser` compile (macOS SDK) | ✅ |
-| Parser logic — 77 assertions executed | ✅ all pass |
+| iOS build + tests against the iOS SDK | ✅ 21 pass |
 | Swift `JSONEncoder` output matches the React `RideData` model | ✅ |
 | `EvenUberCompanion.xcodeproj` / `Info.plist` well-formed | ✅ `plutil -lint` |
 | All 10 sources + test target present in project | ✅ |
@@ -143,11 +186,18 @@ Xcode 26.6 / iOS 26.5 SDK / iPhone 17 Pro simulator.
 | Express server boots, all 5 endpoints respond | ✅ |
 | Swift-encoded JSON accepted by `POST /api/ride-update` | ✅ |
 | UI renders at 576×288 with live data, no console errors | ✅ |
+| Display unit tests (vitest) | ✅ 43 pass |
+| Backend builds and tests (.NET 8) | ✅ 19 pass |
+| Backend payload accepted by the display, two-pin map renders | ✅ |
+| Glasses layer no-ops cleanly in a browser | ✅ |
 
 ## Not yet verified
 
 - Physical device run (simulator verified)
-- G2 hardware
+- **G2 hardware — the glasses render layer has never run on a device.** Image
+  byte format and text sizing both need confirming; see
+  [`GLASSES_RENDERING.md`](even-hub-display/GLASSES_RENDERING.md)
+- Uber API access (scopes depend on developer-account approval)
 
 Everything else is verified locally on Xcode 26.6 / iOS 26.5 SDK and in CI.
 

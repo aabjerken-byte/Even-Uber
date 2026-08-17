@@ -13,11 +13,16 @@ namespace EvenUber.Backend.Controllers;
 public class RidesController : ControllerBase
 {
     private readonly IUberRideService _rideService;
+    private readonly IEvenHubPublisher _publisher;
     private readonly ILogger<RidesController> _logger;
 
-    public RidesController(IUberRideService rideService, ILogger<RidesController> logger)
+    public RidesController(
+        IUberRideService rideService,
+        IEvenHubPublisher publisher,
+        ILogger<RidesController> logger)
     {
         _rideService = rideService;
+        _publisher = publisher;
         _logger = logger;
     }
 
@@ -88,6 +93,50 @@ public class RidesController : ControllerBase
         {
             _logger.LogError(ex, "Error fetching user rides");
             return StatusCode(StatusCodes.Status500InternalServerError, "Failed to fetch rides");
+        }
+    }
+
+    /// <summary>
+    /// Fetch a ride from Uber and push it to the Even Hub display app.
+    /// <para>
+    /// This is the bridge between the two halves of the project. The display
+    /// polls its own server; this makes the backend a producer for that server,
+    /// exactly like the iOS companion app — except this path carries the driver's
+    /// coordinates, which notification text never can.
+    /// </para>
+    /// </summary>
+    /// <response code="200">Ride fetched and forwarded to the display</response>
+    /// <response code="502">Ride fetched, but the display could not be reached</response>
+    [HttpPost("{rideId}/publish")]
+    [ProducesResponseType(typeof(EvenHubRideUpdate), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<EvenHubRideUpdate>> PublishRide(
+        [FromRoute] string rideId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var ride = await _rideService.GetActiveRideAsync(rideId, cancellationToken);
+            var update = EvenHubRideUpdate.FromRideData(ride);
+            var delivered = await _publisher.PublishAsync(update, cancellationToken);
+
+            if (!delivered)
+            {
+                // The ride data is good; only delivery failed. Return it anyway
+                // so the caller can see what would have been sent.
+                return StatusCode(StatusCodes.Status502BadGateway, update);
+            }
+
+            return Ok(update);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error publishing ride {RideId}", rideId);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to publish ride");
         }
     }
 

@@ -68,7 +68,7 @@ even-hub-display/       # React/TypeScript web app for G2 display
 | Data Parsing | Swift regex + text extraction |
 | Display Rendering | React 18 + TypeScript + Vite |
 | G2 Communication | Even Hub SDK (@evenrealities/even_hub_sdk) |
-| Display Output | HTML/CSS → 576x288 monochrome green |
+| Display Output | Even Hub SDK containers → 576x288 monochrome green |
 | State Management | React Hooks |
 | Maps/Location | Lightweight map component (TBD) |
 

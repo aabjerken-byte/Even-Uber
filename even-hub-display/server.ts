@@ -1,7 +1,9 @@
 import express, { Express, Request, Response } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { RideData, ApiResponse, HealthResponse } from './src/models/RideData'
+import { RideData, ApiResponse, HealthResponse, isTerminalStatus } from './src/models/RideData'
+import { isRideStale } from './src/models/rideTiming'
+import { mergeRide } from './src/models/rideMerge'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -41,21 +43,40 @@ app.get('/health', (req: Request, res: Response) => {
 // Receive ride update from iOS companion app
 app.post('/api/ride-update', (req: Request, res: Response) => {
   try {
-    const rideData: RideData = req.body
+    const incoming: RideData = req.body
 
-    // Validate required fields
-    if (!rideData.driverName || rideData.etaMinutes === undefined) {
+    // A terminal update legitimately arrives without a driver name — that's the
+    // whole point of it. Everything else must identify a driver.
+    const terminal = isTerminalStatus(incoming.status)
+    if (!terminal && (!incoming.driverName || incoming.etaMinutes === undefined)) {
       return res.status(400).json({
         status: 'error',
         error: 'Missing required fields: driverName, etaMinutes'
       })
     }
 
+    const existing = activeRide()
+
+    // Terminal updates are transitions, not rides. Post-trip notifications
+    // ("your receipt is ready", "rate your trip") keep arriving long after a
+    // trip ends, and without this a stray receipt would raise a blank
+    // "TRIP COMPLETE" card on the glasses out of nowhere.
+    if (terminal && !existing && !incoming.driverName) {
+      console.log('↩️ Ignoring terminal update with no active ride')
+      return res.json({
+        status: 'ignored',
+        message: 'No active ride to update'
+      })
+    }
+
+    const rideData = mergeRide(existing, incoming)
+
     // Store the ride data
     currentRide = rideData
     lastUpdate = new Date()
 
     console.log(`📤 Received ride update:`)
+    console.log(`   Status: ${rideData.status ?? 'enroute'}`)
     console.log(`   Driver: ${rideData.driverName}`)
     console.log(`   Rating: ${rideData.driverRating}★`)
     console.log(`   Vehicle: ${rideData.vehicleColor} ${rideData.vehicleMake} ${rideData.vehicleModel}`)
@@ -78,9 +99,29 @@ app.post('/api/ride-update', (req: Request, res: Response) => {
   }
 })
 
+/**
+ * Drop the stored ride once it goes stale, so the glasses stop showing a card
+ * for a trip that ended long ago. Terminal rides linger briefly; en-route rides
+ * survive a quiet spell but not an indefinite one.
+ */
+function activeRide(): RideData | null {
+  if (!currentRide) return null
+
+  if (isRideStale(currentRide, Date.now(), lastUpdate?.getTime())) {
+    console.log('🕓 Clearing stale ride data')
+    currentRide = null
+    lastUpdate = null
+    return null
+  }
+
+  return currentRide
+}
+
 // Get current ride data (for debugging/testing)
 app.get('/api/ride', (req: Request, res: Response) => {
-  if (!currentRide) {
+  const ride = activeRide()
+
+  if (!ride) {
     return res.status(404).json({
       status: 'no_data',
       message: 'No active ride'
@@ -89,7 +130,7 @@ app.get('/api/ride', (req: Request, res: Response) => {
 
   const response: ApiResponse<RideData> = {
     status: 'success',
-    data: currentRide
+    data: ride
   }
 
   res.json(response)
@@ -108,12 +149,13 @@ app.post('/api/ride-clear', (req: Request, res: Response) => {
 
 // Get server status
 app.get('/api/status', (req: Request, res: Response) => {
+  const ride = activeRide()
   res.json({
     status: 'ok',
     uptime: process.uptime(),
-    hasActiveRide: !!currentRide,
+    hasActiveRide: !!ride,
     lastUpdate: lastUpdate?.toISOString() || null,
-    currentRide: currentRide || null
+    currentRide: ride
   })
 })
 

@@ -1,7 +1,31 @@
 import Foundation
 
+/// Lifecycle of a ride. Mirrors `RideStatus` in the React model.
+///
+/// Without this the display kept the last card forever — a heads-up display
+/// insisting the driver is "1 min away" after the trip already ended.
+enum RideStatus: String, Codable {
+    case enroute
+    case arriving
+    case arrived
+    case completed
+    case cancelled
+
+    /// Statuses after which the display should wind the card down.
+    var isTerminal: Bool {
+        switch self {
+        case .arrived, .completed, .cancelled: return true
+        case .enroute, .arriving: return false
+        }
+    }
+
+    /// Whether an ETA is meaningful for this status.
+    var expectsETA: Bool { self == .enroute || self == .arriving }
+}
+
 /// Data model for a ride notification parsed from Uber
 struct RideData: Codable {
+    let status: RideStatus
     let driverName: String
     let driverRating: Double
     let vehicleMake: String
@@ -16,6 +40,7 @@ struct RideData: Codable {
     let timestamp: Date
 
     enum CodingKeys: String, CodingKey {
+        case status
         case driverName
         case driverRating
         case vehicleMake
@@ -32,6 +57,7 @@ struct RideData: Codable {
 
     /// Initialize with default values for optional fields
     init(
+        status: RideStatus = .enroute,
         driverName: String,
         driverRating: Double = 0.0,
         vehicleMake: String = "",
@@ -45,6 +71,7 @@ struct RideData: Codable {
         requesterLng: Double? = nil,
         timestamp: Date = Date()
     ) {
+        self.status = status
         self.driverName = driverName
         self.driverRating = driverRating
         self.vehicleMake = vehicleMake
@@ -68,6 +95,7 @@ struct RideData: Codable {
         guard let latitude, let longitude else { return self }
 
         return RideData(
+            status: status,
             driverName: driverName,
             driverRating: driverRating,
             vehicleMake: vehicleMake,

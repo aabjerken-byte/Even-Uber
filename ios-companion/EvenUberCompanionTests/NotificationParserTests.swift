@@ -112,10 +112,9 @@ final class NotificationParserTests: XCTestCase {
 
     func testRejectsNonRideNotifications() {
         let nonRides = [
-            ("Uber", "Your trip receipt is ready. Total $24.50"),
-            ("Uber", "Rate your trip with your driver"),
             ("Promo", "50% off your next 3 rides this week"),
             ("Uber Eats", "Your order is being prepared"),
+            ("Uber", "Your driver is on the way"),
         ]
 
         for (title, body) in nonRides {
@@ -123,6 +122,28 @@ final class NotificationParserTests: XCTestCase {
                 NotificationParser.parse(title: title, body: body),
                 "should not have parsed a ride from: \(body)"
             )
+        }
+    }
+
+    /// Post-trip notices are not junk — they're the signal that the ride ended,
+    /// and the display uses them to take the card off the glasses.
+    ///
+    /// They carry no driver and no ETA, so they only ever act as a transition:
+    /// the server drops a terminal update that arrives with no ride in progress,
+    /// which is what stops a stray receipt raising a blank card.
+    func testPostTripNoticesAreTerminalSignals() throws {
+        let postTrip = [
+            "Your trip receipt is ready. Total $24.50",
+            "Rate your trip with your driver",
+            "Your trip is complete",
+        ]
+
+        for body in postTrip {
+            let ride = try XCTUnwrap(
+                NotificationParser.parse(title: "Uber", body: body),
+                "expected a terminal signal from: \(body)"
+            )
+            XCTAssertEqual(ride.status, .completed, body)
         }
     }
 
@@ -179,6 +200,87 @@ final class NotificationParserTests: XCTestCase {
 
     func testEtaAbsentReturnsZero() {
         XCTAssertEqual(NotificationParser.extractETA(from: "Your driver has arrived"), 0)
+    }
+
+    // MARK: - Ride lifecycle
+
+    func testClassifiesLifecycleStatus() {
+        let expectations: [(String, RideStatus)] = [
+            ("John D. is 3 mins away in a Silver Toyota Prius", .enroute),
+            ("Your driver is arriving now", .arriving),
+            ("John is pulling up", .arriving),
+            ("Your driver has arrived", .arrived),
+            ("Sarah is here — meet at the pickup point", .arrived),
+            ("Your driver is waiting outside", .arrived),
+            ("Your trip is complete", .completed),
+            ("Rate your trip with John", .completed),
+            ("Your trip receipt is ready", .completed),
+            ("Your ride was cancelled", .cancelled),
+            ("Your trip has been canceled", .cancelled),
+        ]
+
+        for (text, expected) in expectations {
+            XCTAssertEqual(NotificationParser.extractStatus(from: text), expected, text)
+        }
+    }
+
+    func testCancellationWinsOverAnEta() {
+        // A cancellation that still quotes an ETA is a cancellation.
+        XCTAssertEqual(
+            NotificationParser.extractStatus(from: "Your ride was cancelled — driver was 3 mins away"),
+            .cancelled
+        )
+    }
+
+    /// The regression this whole lifecycle change exists for: an arrival notice
+    /// names nobody and quotes no ETA, and the old guard dropped it — leaving a
+    /// stale "3 MIN" on the glasses for a driver already at the kerb.
+    func testBareArrivalNoticeIsAccepted() throws {
+        let ride = try XCTUnwrap(NotificationParser.parse(
+            title: "Uber",
+            body: "Your driver has arrived"
+        ))
+        XCTAssertEqual(ride.status, .arrived)
+        XCTAssertEqual(ride.etaMinutes, 0)
+    }
+
+    func testCancellationWithoutDriverNameIsAccepted() throws {
+        let ride = try XCTUnwrap(NotificationParser.parse(
+            title: "Uber",
+            body: "Your ride was cancelled"
+        ))
+        XCTAssertEqual(ride.status, .cancelled)
+    }
+
+    func testEnRouteRideStillRequiresNameAndEta() {
+        // Terminal updates get a lower bar; en-route ones must not.
+        XCTAssertNil(NotificationParser.parse(title: "Uber", body: "Your driver is on the way"))
+        XCTAssertNil(NotificationParser.parse(
+            title: "Uber",
+            body: "Your driver John D. is in a Silver Toyota Prius (ABC123)"
+        ))
+    }
+
+    func testStatusSurvivesEncoding() throws {
+        let ride = try XCTUnwrap(NotificationParser.parse(
+            title: "Uber",
+            body: "Your driver has arrived"
+        ))
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let json = try XCTUnwrap(String(data: try encoder.encode(ride), encoding: .utf8))
+
+        // The React model keys off this exact string.
+        XCTAssertTrue(json.contains("\"status\":\"arrived\""), json)
+    }
+
+    func testDefaultStatusIsEnroute() throws {
+        let ride = try XCTUnwrap(NotificationParser.parse(
+            title: "Your Uber is arriving",
+            body: "John D. (4.9★) is 3 mins away in a Silver Toyota Prius (ABC123)"
+        ))
+        XCTAssertEqual(ride.status, .enroute)
     }
 
     // MARK: - Rating variants

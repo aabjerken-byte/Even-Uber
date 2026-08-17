@@ -1,0 +1,25 @@
+{
+  // Standalone config for the Express server.
+  //
+  // server.ts was previously covered by no tsconfig that anything ran: the app
+  // config only includes `src`, and `npm run build` never builds the referenced
+  // projects. The server therefore shipped unchecked. This config is invoked
+  // explicitly by `npm run type-check:server`, which `build` now depends on.
+  //
+  // It is deliberately NOT a referenced project — it shares src/models with the
+  // app config, and composite projects may not overlap file lists.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["server.ts", "src/models/**/*.ts"]
+}

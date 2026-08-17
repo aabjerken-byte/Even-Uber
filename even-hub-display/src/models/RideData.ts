@@ -1,7 +1,33 @@
 /**
+ * Lifecycle of a ride, so the display knows when to stop showing a card.
+ *
+ * Without this the last ride stayed on screen forever — a HUD confidently
+ * reporting "1 MIN · ARRIVING" long after the trip ended.
+ */
+export type RideStatus =
+  | 'enroute'    // driver on the way, ETA meaningful
+  | 'arriving'   // pulling up now
+  | 'arrived'    // waiting at the pickup point
+  | 'completed'  // trip finished
+  | 'cancelled'  // ride cancelled
+
+/** Statuses after which the card should be cleared rather than kept alive. */
+export const TERMINAL_RIDE_STATUSES: readonly RideStatus[] = [
+  'arrived',
+  'completed',
+  'cancelled'
+]
+
+export function isTerminalStatus(status?: RideStatus): boolean {
+  return status !== undefined && TERMINAL_RIDE_STATUSES.includes(status)
+}
+
+/**
  * RideData model matching the iOS companion app + advanced features
  */
 export interface RideData {
+  /** Defaults to 'enroute' when a producer omits it. */
+  status?: RideStatus
   driverName: string
   driverRating: number
   vehicleMake: string
