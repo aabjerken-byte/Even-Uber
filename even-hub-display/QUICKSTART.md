@@ -58,9 +58,24 @@ You should see:
 
 ### Open the App
 
-Visit **`http://127.0.0.1:3000`** in your browser.
+`npm run dev` starts **two** processes on **two** ports:
 
-You should see the "Waiting for ride data..." screen.
+| Port | Process | Use it for |
+|------|---------|-----------|
+| `3000` | Express API (`server.ts`) | The API the iOS app posts to. Also serves the production bundle from `dist/` after `npm run build`. |
+| `5173` | Vite dev server | Browsing the UI while developing — this is the one with hot reload. |
+
+While developing, visit **`http://127.0.0.1:5173`**. The page calls the API on
+port 3000 directly (the server sends permissive CORS headers), so both must be
+running.
+
+To view the *production* build instead, run `npm run build` then `npm start` and
+visit **`http://127.0.0.1:3000`**.
+
+Either way you should see the "Waiting for ride data..." screen.
+
+> The API stays on port 3000 in both modes — that address is hardcoded in the
+> iOS companion app, so don't move it.
 
 ### Send Mock Data
 

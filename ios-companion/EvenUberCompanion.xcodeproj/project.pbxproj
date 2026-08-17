@@ -1,0 +1,534 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		184A7000F38800696E437843 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16C3167C956B41B046193B59 /* Assets.xcassets */; };
+		201EFCBD8594D9FDBAFF7125 /* EvenHubClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F6E6D075FDDF584734CBF07 /* EvenHubClient.swift */; };
+		229DA449189F58E7A6E4ED40 /* NotificationPermissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B92C2162FF4088EBA22475C /* NotificationPermissions.swift */; };
+		59114A293C7B58DF14C6494C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322546CC0C6C5E7257AF63E8 /* AppDelegate.swift */; };
+		73CF3673F18039DC948B3E31 /* EvenUberCompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAA353A7001AE73803C9FD3 /* EvenUberCompanionApp.swift */; };
+		8757CC4B6455663DAD5DF563 /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3E2B0DE4C9CED3F80758E8 /* StatusView.swift */; };
+		996F7A3A3C98C6FF9CCD02A2 /* UberNotificationListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFF4927432E83FD9448396B /* UberNotificationListener.swift */; };
+		9EE8CD5BC03BB9112C88292F /* RideData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3604D26D08FA9DBD1F19B135 /* RideData.swift */; };
+		D4DC1DFAC9EA5A5478659FBD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910BD1F623A2647FCF849904 /* SettingsView.swift */; };
+		DA1A6C7DBB82D1608F4A6235 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256401AD4A09038B3CA2FF81 /* ContentView.swift */; };
+		E0206414F389945F77CB460D /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DFD894258848EDCAE9DCA6 /* LocationProvider.swift */; };
+		EAA1733FBC5E8C4997BD11E3 /* NotificationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223440FEE15F4571B8185ED8 /* NotificationParser.swift */; };
+		FE293306B335176D0E723403 /* NotificationParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F365F6EAB0F85EECA0A8D69 /* NotificationParserTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A9FB9028233C9EA862D4E714 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7EF0E454B83C5714B0BE1537 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 387D74340130E55B30467256;
+			remoteInfo = EvenUberCompanion;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0F6E6D075FDDF584734CBF07 /* EvenHubClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvenHubClient.swift; sourceTree = "<group>"; };
+		16C3167C956B41B046193B59 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1AFF4927432E83FD9448396B /* UberNotificationListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UberNotificationListener.swift; sourceTree = "<group>"; };
+		223440FEE15F4571B8185ED8 /* NotificationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationParser.swift; sourceTree = "<group>"; };
+		256401AD4A09038B3CA2FF81 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		322546CC0C6C5E7257AF63E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		35DE05430565924BED3E9C6C /* EvenUberCompanion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = EvenUberCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		35DFD894258848EDCAE9DCA6 /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		3604D26D08FA9DBD1F19B135 /* RideData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideData.swift; sourceTree = "<group>"; };
+		4B3E2B0DE4C9CED3F80758E8 /* StatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusView.swift; sourceTree = "<group>"; };
+		4C6426B5F105297C597899E7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6F365F6EAB0F85EECA0A8D69 /* NotificationParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationParserTests.swift; sourceTree = "<group>"; };
+		834E416157848435CACA19C5 /* EvenUberCompanionTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = EvenUberCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B92C2162FF4088EBA22475C /* NotificationPermissions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPermissions.swift; sourceTree = "<group>"; };
+		910BD1F623A2647FCF849904 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		DDAA353A7001AE73803C9FD3 /* EvenUberCompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvenUberCompanionApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0102D3D7B7E83A0457DCFBD3 /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				35DFD894258848EDCAE9DCA6 /* LocationProvider.swift */,
+			);
+			path = Location;
+			sourceTree = "<group>";
+		};
+		1C4585BDF2A4FF743C9B2F96 /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				223440FEE15F4571B8185ED8 /* NotificationParser.swift */,
+				1AFF4927432E83FD9448396B /* UberNotificationListener.swift */,
+			);
+			path = Notification;
+			sourceTree = "<group>";
+		};
+		315B5A80BD8BD377376BA502 /* EvenUberCompanionTests */ = {
+			isa = PBXGroup;
+			children = (
+				6F365F6EAB0F85EECA0A8D69 /* NotificationParserTests.swift */,
+			);
+			path = EvenUberCompanionTests;
+			sourceTree = "<group>";
+		};
+		3CD63676E06F7648BEA95AA7 /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				8B92C2162FF4088EBA22475C /* NotificationPermissions.swift */,
+			);
+			path = Permissions;
+			sourceTree = "<group>";
+		};
+		5947EA6F6096D8D99C4BE168 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				35DE05430565924BED3E9C6C /* EvenUberCompanion.app */,
+				834E416157848435CACA19C5 /* EvenUberCompanionTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		65A0BDA84373653FC78FB696 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				322546CC0C6C5E7257AF63E8 /* AppDelegate.swift */,
+				DDAA353A7001AE73803C9FD3 /* EvenUberCompanionApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		886EC39E3E394CDC41F4A64C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				16C3167C956B41B046193B59 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		8B0949CC70017A88C26B6857 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				0F6E6D075FDDF584734CBF07 /* EvenHubClient.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		91C37A43F5B73049828BB5C8 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3604D26D08FA9DBD1F19B135 /* RideData.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B6EAE16356BA79F67EF57AED /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				256401AD4A09038B3CA2FF81 /* ContentView.swift */,
+				910BD1F623A2647FCF849904 /* SettingsView.swift */,
+				4B3E2B0DE4C9CED3F80758E8 /* StatusView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		BB541E49E00882BCC47B55E7 = {
+			isa = PBXGroup;
+			children = (
+				ED9B50AA119A06B45E9B2390 /* EvenUberCompanion */,
+				315B5A80BD8BD377376BA502 /* EvenUberCompanionTests */,
+				5947EA6F6096D8D99C4BE168 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ED9B50AA119A06B45E9B2390 /* EvenUberCompanion */ = {
+			isa = PBXGroup;
+			children = (
+				65A0BDA84373653FC78FB696 /* App */,
+				0102D3D7B7E83A0457DCFBD3 /* Location */,
+				91C37A43F5B73049828BB5C8 /* Models */,
+				8B0949CC70017A88C26B6857 /* Network */,
+				1C4585BDF2A4FF743C9B2F96 /* Notification */,
+				3CD63676E06F7648BEA95AA7 /* Permissions */,
+				886EC39E3E394CDC41F4A64C /* Resources */,
+				B6EAE16356BA79F67EF57AED /* UI */,
+				4C6426B5F105297C597899E7 /* Info.plist */,
+			);
+			path = EvenUberCompanion;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		387D74340130E55B30467256 /* EvenUberCompanion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 373E6A12138AA1A35554251D /* Build configuration list for PBXNativeTarget "EvenUberCompanion" */;
+			buildPhases = (
+				40A373A15201FF038AA7AA33 /* Sources */,
+				A7089378F91ED7BA79C2B4AA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EvenUberCompanion;
+			packageProductDependencies = (
+			);
+			productName = EvenUberCompanion;
+			productReference = 35DE05430565924BED3E9C6C /* EvenUberCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5B5B143F8E4F79E5AA4BB54C /* EvenUberCompanionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4823E5B3A77E9009C1D219A7 /* Build configuration list for PBXNativeTarget "EvenUberCompanionTests" */;
+			buildPhases = (
+				7F7B568D23C9C3A1A4A0CC9C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F7D093BBDF55E54F6D71909B /* PBXTargetDependency */,
+			);
+			name = EvenUberCompanionTests;
+			packageProductDependencies = (
+			);
+			productName = EvenUberCompanionTests;
+			productReference = 834E416157848435CACA19C5 /* EvenUberCompanionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7EF0E454B83C5714B0BE1537 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					387D74340130E55B30467256 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					5B5B143F8E4F79E5AA4BB54C = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 8639ECB2AA9431DB2EEF3D2A /* Build configuration list for PBXProject "EvenUberCompanion" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = BB541E49E00882BCC47B55E7;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5947EA6F6096D8D99C4BE168 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				387D74340130E55B30467256 /* EvenUberCompanion */,
+				5B5B143F8E4F79E5AA4BB54C /* EvenUberCompanionTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A7089378F91ED7BA79C2B4AA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				184A7000F38800696E437843 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		40A373A15201FF038AA7AA33 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				59114A293C7B58DF14C6494C /* AppDelegate.swift in Sources */,
+				DA1A6C7DBB82D1608F4A6235 /* ContentView.swift in Sources */,
+				201EFCBD8594D9FDBAFF7125 /* EvenHubClient.swift in Sources */,
+				73CF3673F18039DC948B3E31 /* EvenUberCompanionApp.swift in Sources */,
+				E0206414F389945F77CB460D /* LocationProvider.swift in Sources */,
+				EAA1733FBC5E8C4997BD11E3 /* NotificationParser.swift in Sources */,
+				229DA449189F58E7A6E4ED40 /* NotificationPermissions.swift in Sources */,
+				9EE8CD5BC03BB9112C88292F /* RideData.swift in Sources */,
+				D4DC1DFAC9EA5A5478659FBD /* SettingsView.swift in Sources */,
+				8757CC4B6455663DAD5DF563 /* StatusView.swift in Sources */,
+				996F7A3A3C98C6FF9CCD02A2 /* UberNotificationListener.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7F7B568D23C9C3A1A4A0CC9C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE293306B335176D0E723403 /* NotificationParserTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F7D093BBDF55E54F6D71909B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 387D74340130E55B30467256 /* EvenUberCompanion */;
+			targetProxy = A9FB9028233C9EA862D4E714 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		21FD6A41BB1D158873048483 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = EvenUberCompanion/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Even Uber";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.evenuber.companion;
+				PRODUCT_NAME = EvenUberCompanion;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		347041058F32D84AD12763AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = EvenUberCompanion/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Even Uber";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.evenuber.companion;
+				PRODUCT_NAME = EvenUberCompanion;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		40F4EC09DA20AE3E90A6ACFE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		509C2FD4C441F4ECD181F18E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.evenuber.companion.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EvenUberCompanion.app/EvenUberCompanion";
+			};
+			name = Debug;
+		};
+		50B5687FBD1C4ABB3D0CC716 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.evenuber.companion.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EvenUberCompanion.app/EvenUberCompanion";
+			};
+			name = Release;
+		};
+		A24EFE0A9593E4164B5F8430 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		373E6A12138AA1A35554251D /* Build configuration list for PBXNativeTarget "EvenUberCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				21FD6A41BB1D158873048483 /* Debug */,
+				347041058F32D84AD12763AE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4823E5B3A77E9009C1D219A7 /* Build configuration list for PBXNativeTarget "EvenUberCompanionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				509C2FD4C441F4ECD181F18E /* Debug */,
+				50B5687FBD1C4ABB3D0CC716 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8639ECB2AA9431DB2EEF3D2A /* Build configuration list for PBXProject "EvenUberCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A24EFE0A9593E4164B5F8430 /* Debug */,
+				40F4EC09DA20AE3E90A6ACFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7EF0E454B83C5714B0BE1537 /* Project object */;
+}
