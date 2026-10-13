@@ -24,7 +24,8 @@ export interface MapRenderInput {
   requesterLng?: number
   driverLat?: number
   driverLng?: number
-  etaMinutes?: number
+  /** Live minutes remaining from `rangeRingMinutes`; omit to draw no ring. */
+  rangeMinutes?: number
 }
 
 function isCoord(value?: number): value is number {
@@ -109,7 +110,7 @@ export function drawMap(
     // see NOTIFICATION_ACCESS.md for why we refuse to guess one.
     const maxRadius = Math.min(width, height) / 2 - 12
 
-    if (isCoord(input.etaMinutes) && input.etaMinutes > 0) {
+    if (isCoord(input.rangeMinutes) && input.rangeMinutes > 0) {
       ctx.setLineDash([4, 3])
       ctx.beginPath()
       ctx.arc(cx, cy, maxRadius, 0, Math.PI * 2)

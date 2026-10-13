@@ -1,4 +1,5 @@
 import { RideData } from '../models/RideData'
+import { rangeRingMinutes } from '../models/rideTiming'
 import DriverInfo from './DriverInfo'
 import ETADisplay from './ETADisplay'
 import LocationMap from './LocationMap'
@@ -28,7 +29,8 @@ export default function RideCard({ data }: RideCardProps) {
         driverLng={data.driverLng}
         requesterLat={data.requesterLat}
         requesterLng={data.requesterLng}
-        etaMinutes={data.etaMinutes}
+        rangeMinutes={rangeRingMinutes(data) ?? undefined}
+        status={data.status}
       />
     </div>
   )

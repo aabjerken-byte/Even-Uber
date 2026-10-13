@@ -85,6 +85,18 @@ export function computeEta(ride: RideData, now: number = Date.now()): EtaState {
 }
 
 /**
+ * Minutes to size the map's range ring by, or null when no ring should be drawn.
+ *
+ * Derived from `computeEta` so the ring and the ETA readout can never disagree.
+ * Sizing it from the raw `etaMinutes` left a "driver within ~1 mi" ring on
+ * screen after the card said ARRIVED, and never shrank it as the ETA ran down.
+ */
+export function rangeRingMinutes(ride: RideData, now: number = Date.now()): number | null {
+  const { minutesRemaining } = computeEta(ride, now)
+  return minutesRemaining !== null && minutesRemaining > 0 ? minutesRemaining : null
+}
+
+/**
  * Whether a ride should still be shown at all.
  *
  * `receivedAt` is when the server accepted the payload; it falls back to the

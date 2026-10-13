@@ -1,10 +1,28 @@
+import { RideStatus } from '../models/RideData'
+
 export interface LocationMapProps {
   driverLat?: number
   driverLng?: number
   requesterLat?: number
   requesterLng?: number
-  /** Used to draw a range ring when the driver's coordinates are unknown. */
-  etaMinutes?: number
+  /**
+   * Live minutes remaining (see `rangeRingMinutes`), used to draw a range ring
+   * when the driver's coordinates are unknown. Omit to draw no ring.
+   */
+  rangeMinutes?: number
+  status?: RideStatus
+}
+
+/** What to say under the map when there is no range ring to describe. */
+function positionCaption(status?: RideStatus): string {
+  switch (status) {
+    case 'arriving':
+      return '📍 Driver pulling up'
+    case 'arrived':
+      return '📍 Driver at pickup'
+    default:
+      return '📍 Your position'
+  }
 }
 
 const MAP_WIDTH = 280
@@ -91,7 +109,8 @@ export default function LocationMap({
   driverLng,
   requesterLat,
   requesterLng,
-  etaMinutes
+  rangeMinutes,
+  status
 }: LocationMapProps) {
   const hasRequester = isCoord(requesterLat) && isCoord(requesterLng)
   const hasDriver = isCoord(driverLat) && isCoord(driverLng)
@@ -172,8 +191,8 @@ export default function LocationMap({
     const centerY = MAP_HEIGHT / 2
     const maxRadius = Math.min(MAP_WIDTH, MAP_HEIGHT) / 2 - PADDING
 
-    const estimatedMiles = isCoord(etaMinutes) && etaMinutes > 0
-      ? (etaMinutes / 60) * ASSUMED_CITY_SPEED_MPH
+    const estimatedMiles = isCoord(rangeMinutes) && rangeMinutes > 0
+      ? (rangeMinutes / 60) * ASSUMED_CITY_SPEED_MPH
       : null
 
     return (
@@ -226,13 +245,15 @@ export default function LocationMap({
 
         <div className="map-info">
           {estimatedMiles !== null ? (
-            <p className="distance">
-              📏 Driver within ~{formatDistance(estimatedMiles)}
-            </p>
+            <>
+              <p className="distance">
+                📏 Driver within ~{formatDistance(estimatedMiles)}
+              </p>
+              <p className="map-note">Range estimated from ETA · exact position unavailable</p>
+            </>
           ) : (
-            <p className="distance">📍 Your position</p>
+            <p className="distance">{positionCaption(status)}</p>
           )}
-          <p className="map-note">Range estimated from ETA · exact position unavailable</p>
         </div>
       </div>
     )

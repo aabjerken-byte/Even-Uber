@@ -5,7 +5,8 @@ import {
   RIDE_STALE_AFTER_MS,
   TERMINAL_RIDE_LINGER_MS,
   computeEta,
-  isRideStale
+  isRideStale,
+  rangeRingMinutes
 } from './rideTiming'
 import { mergeRide } from './rideMerge'
 
@@ -82,6 +83,25 @@ describe('computeEta', () => {
     expect(state.label).toBe('ARRIVING')
     expect(state.minutesRemaining).toBe(0)
     expect(state.overdue).toBe(false)
+  })
+})
+
+describe('rangeRingMinutes', () => {
+  it('shrinks with the live ETA instead of sticking to the reported figure', () => {
+    expect(rangeRingMinutes(ride(), T0)).toBe(5)
+    expect(rangeRingMinutes(ride(), T0 + 3 * MINUTE)).toBe(2)
+  })
+
+  it.each<RideStatus>(['arriving', 'arrived', 'completed', 'cancelled'])(
+    'draws no ring once the ride is %s, even with a leftover ETA',
+    status => {
+      expect(rangeRingMinutes(ride({ status, etaMinutes: 3 }), T0)).toBeNull()
+    }
+  )
+
+  it('draws no ring once the ETA has run out or gone unknown', () => {
+    expect(rangeRingMinutes(ride(), T0 + 6 * MINUTE)).toBeNull()
+    expect(rangeRingMinutes(ride(), T0 + (5 + ETA_GRACE_MINUTES + 1) * MINUTE)).toBeNull()
   })
 })
 
