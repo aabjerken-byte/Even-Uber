@@ -19,7 +19,7 @@ GitHub Actions runs on Apple's macOS servers, so you can:
 ### 1. Push Your Code to GitHub
 
 ```bash
-cd C:\Users\abjer.000\EvenG2-Dev
+cd Even-Uber
 git add EvenUber/ios-companion/
 git commit -m "Add iOS companion app Swift files"
 git push origin feature/even-uber
@@ -27,7 +27,7 @@ git push origin feature/even-uber
 
 ### 2. Go to Your GitHub Repo
 
-Open: https://github.com/aabjerken-byte/Executive-Whisperer
+Open: https://github.com/aabjerken-byte/Even-Uber
 
 ### 3. Check Actions Tab
 
@@ -59,12 +59,18 @@ Click **Actions** → You should see **"Build iOS Companion App"** workflow runn
 **What it does**:
 ```
 1. Checks out your code
-2. Sets up Xcode 15 + Swift 5.9
-3. Validates all Swift files
-4. Runs swiftlint (code style check)
-5. Creates build summary report
-6. Uploads artifacts
+2. Selects the latest stable Xcode
+3. Checks EvenUberCompanion.xcodeproj is in sync with project.yml
+4. Picks the newest available iPhone simulator
+5. xcodebuild build-for-testing   (real iOS SDK compile)
+6. xcodebuild test-without-building (runs NotificationParserTests)
+7. Runs swiftlint (non-blocking)
+8. Uploads the .xcresult bundle
 ```
+
+> Until August 2026 this workflow only ran `swiftc -parse`, which checks syntax
+> without resolving types. It reported success on code that did not compile.
+> It now performs a real build and test run.
 
 **View results**:
 ```
@@ -73,7 +79,11 @@ GitHub → Actions → "Build iOS Companion App"
   → See build summary and logs
 ```
 
-### 2. `ios-build-signed.yml` (Signed App Workflow)
+### 2. `ios-build-signed.yml` (Signed App Workflow) — **not yet created**
+
+> This workflow is described below as a plan. It does not exist in
+> `.github/workflows/` yet. The section is kept because the certificate and
+> secret setup it documents is still what you'd need.
 
 **Triggered by**:
 - ⏳ Manual trigger only (safer for secrets)
@@ -97,7 +107,7 @@ GitHub → Actions → "Build iOS Companion App"
 The `ios-build.yml` workflow is already set up and will run automatically.
 
 ### To trigger manually:
-1. Go to https://github.com/aabjerken-byte/Executive-Whisperer/actions
+1. Go to https://github.com/aabjerken-byte/Even-Uber/actions
 2. Click **Build iOS Companion App**
 3. Click **Run workflow**
 4. Wait ~10 minutes
@@ -142,7 +152,7 @@ base64 -i ~/Downloads/certificate.p12 | pbcopy
 
 ### 2C. Add to GitHub Secrets
 
-1. Go to: https://github.com/aabjerken-byte/Executive-Whisperer/settings/secrets/actions
+1. Go to: https://github.com/aabjerken-byte/Even-Uber/settings/secrets/actions
 2. Click **New repository secret**
 3. Create these secrets:
 

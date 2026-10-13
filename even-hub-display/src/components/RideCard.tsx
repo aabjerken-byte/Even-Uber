@@ -21,13 +21,14 @@ export default function RideCard({ data }: RideCardProps) {
         plate={data.licensePlate}
       />
 
-      <ETADisplay minutes={data.etaMinutes} />
+      <ETADisplay ride={data} />
 
       <LocationMap
         driverLat={data.driverLat}
         driverLng={data.driverLng}
         requesterLat={data.requesterLat}
         requesterLng={data.requesterLng}
+        etaMinutes={data.etaMinutes}
       />
     </div>
   )

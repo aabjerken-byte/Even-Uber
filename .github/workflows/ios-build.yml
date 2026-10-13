@@ -10,122 +10,119 @@ on:
     branches: [ main, develop ]
     paths:
       - 'ios-companion/**'
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    name: Build iOS App
+    name: Build & Test (iOS Simulator)
     runs-on: macos-latest
 
     env:
-      XCODE_VERSION: "26.6.0"
-      SWIFT_VERSION: "5.9"
+      PROJECT: ios-companion/EvenUberCompanion.xcodeproj
+      SCHEME: EvenUberCompanion
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Xcode
+      - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: ${{ env.XCODE_VERSION }}
+          # Pinning an exact version breaks whenever GitHub rotates images.
+          xcode-version: latest-stable
 
-      - name: Display Xcode version
+      - name: Show toolchain versions
         run: |
           xcode-select --print-path
+          xcodebuild -version
           xcrun swift --version
 
-      - name: Validate Swift Files
-        working-directory: ios-companion
+      - name: Verify project.yml matches the committed project
         run: |
-          echo "Validating Swift files..."
-          ERRORS=0
-          for file in *.swift; do
-            echo "Parsing $file..."
-            if swiftc -parse "$file" 2>/dev/null; then
-              echo "  ✅ $file"
-            else
-              echo "  ❌ Error in $file"
-              ((ERRORS++))
-            fi
-          done
-
-          if [ $ERRORS -eq 0 ]; then
-            echo ""
-            echo "✅ All files validated successfully"
+          brew install xcodegen
+          cd ios-companion
+          xcodegen generate
+          if ! git diff --quiet -- EvenUberCompanion.xcodeproj; then
+            echo "::warning::EvenUberCompanion.xcodeproj differs from project.yml."
+            echo "Run 'cd ios-companion && xcodegen generate' and commit the result."
+            git diff --stat -- EvenUberCompanion.xcodeproj
           else
-            echo ""
-            echo "❌ $ERRORS files had errors"
-            exit 1
+            echo "✅ Project file is in sync with project.yml"
           fi
 
-      - name: Run Swift Linter (swiftlint)
+      - name: Pick a simulator
+        id: sim
+        run: |
+          # Choose the newest available iPhone runtime rather than hardcoding a
+          # device name that disappears when GitHub updates the image.
+          UDID=$(xcrun simctl list devices available --json \
+            | python3 -c "
+          import json,sys
+          data = json.load(sys.stdin)['devices']
+          best = None
+          for runtime, devices in data.items():
+              if 'iOS' not in runtime:
+                  continue
+              for d in devices:
+                  if d.get('isAvailable') and d['name'].startswith('iPhone'):
+                      if best is None or runtime > best[0]:
+                          best = (runtime, d['udid'], d['name'])
+          if best is None:
+              sys.exit('No available iPhone simulator found')
+          print(best[1])
+          print(f'Using {best[2]} on {best[0]}', file=sys.stderr)
+          ")
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices available | grep -A3 "iOS"
+
+      - name: Build
+        run: |
+          xcodebuild build-for-testing \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run SwiftLint
         continue-on-error: true
         run: |
-          if ! command -v swiftlint &> /dev/null; then
-            brew install swiftlint
-          fi
+          brew install swiftlint
+          swiftlint lint --reporter github-actions-logging ios-companion || true
 
-          echo "Running swiftlint on iOS files..."
-          swiftlint lint ios-companion/*.swift --reporter json > swiftlint-report.json || true
-
-      - name: Create Build Report
-        run: |
-          cat > build-report.md << 'EOF'
-          # iOS Companion App - Build Report
-
-          ## ✅ Build Status: SUCCESS
-
-          **Date**: $(date)
-          **Xcode**: $(xcode-select -p)
-          **Swift**: $(swiftc --version)
-
-          ## Swift Files Validated
-          - ✅ RideData.swift
-          - ✅ NotificationParser.swift
-          - ✅ EvenHubClient.swift
-          - ✅ UberNotificationListener.swift
-          - ✅ NotificationPermissions.swift
-          - ✅ EvenUberCompanionApp.swift
-          - ✅ ContentView.swift
-          - ✅ StatusView.swift
-          - ✅ SettingsView.swift
-
-          ## Next Steps
-          1. Create Xcode project (follow XCODE_SETUP.md)
-          2. Add these Swift files to Xcode
-          3. Configure signing & capabilities
-          4. Build and test on simulator/device
-          EOF
-          cat build-report.md
-
-      - name: Upload Build Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-report
-          path: build-report.md
-
-      - name: Upload Linter Report
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: swiftlint-report
-          path: swiftlint-report.json
+          name: test-results
+          path: TestResults.xcresult
           if-no-files-found: ignore
 
-  notify:
-    name: Build Complete
-    runs-on: ubuntu-latest
-    needs: build
-    if: always()
-
-    steps:
-      - name: Build Status
+      - name: Build summary
+        if: always()
         run: |
-          echo "## iOS Build Workflow Complete ✅"
-          echo ""
-          echo "**Build Result**: ${{ needs.build.result }}"
-          echo ""
-          echo "Check the **Artifacts** tab to download:"
-          echo "- `build-report.md` - Build summary"
-          echo "- `swiftlint-report.json` - Code style analysis"
+          {
+            echo "## iOS Companion Build"
+            echo ""
+            echo "- **Xcode**: $(xcodebuild -version | head -1)"
+            echo "- **Swift**: $(xcrun swift --version 2>&1 | head -1)"
+            echo "- **Simulator**: ${{ steps.sim.outputs.udid }}"
+            echo "- **Result**: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

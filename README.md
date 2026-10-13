@@ -18,9 +18,17 @@ Real-time ride tracking on Even Reality G2 AR glasses. See your Uber driver appr
 [576x288 Green Micro-LED Display]
 ```
 
+> ⚠️ **Design constraint:** iOS provides no API for one app to read another
+> app's notifications, so the companion app cannot observe the official Uber
+> app. The parser, relay and display all work end to end — only that first hop
+> is blocked. See
+> [`ios-companion/NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md)
+> for the alternatives, including the Uber API service already scaffolded in
+> [`src/backend/`](src/backend/).
+
 ## Phase 1 (Current MVP)
 
-- ✅ **iOS Companion App** (Swift): Intercepts Uber notifications, parses data
+- ✅ **iOS Companion App** (Swift): Parses ride notifications into structured data
 - ✅ **Even Hub Display** (React + TypeScript): Renders driver card, ETA, location to G2
 - ✅ **Real-time Data**: Driver name, rating, vehicle info, license plate, ETA
 - ✅ **Location Tracking**: Driver position vs. requester (GPS) on interactive map
@@ -60,7 +68,7 @@ even-hub-display/       # React/TypeScript web app for G2 display
 | Data Parsing | Swift regex + text extraction |
 | Display Rendering | React 18 + TypeScript + Vite |
 | G2 Communication | Even Hub SDK (@evenrealities/even_hub_sdk) |
-| Display Output | HTML/CSS → 576x288 monochrome green |
+| Display Output | Even Hub SDK containers → 576x288 monochrome green |
 | State Management | React Hooks |
 | Maps/Location | Lightweight map component (TBD) |
 

@@ -4,6 +4,7 @@ import RideCard from './components/RideCard'
 import StatusView from './components/StatusView'
 import RideHistory from './components/RideHistory'
 import SettingsPanel from './components/SettingsPanel'
+import { useGlasses } from './glasses/useGlasses'
 import './App.css'
 
 interface RideHistoryEntry {
@@ -42,6 +43,10 @@ export default function App() {
   })
 
   // Settings state
+  // Mirror the current ride onto the G2 glasses. No-ops outside the Even App
+  // WebView, so the browser preview is unaffected.
+  const glassesActive = useGlasses(rideData)
+
   const [pollInterval, setPollInterval] = useState(POLL_INTERVAL)
   const [showNotifications, setShowNotifications] = useState(true)
   const [autoHideCompleted, setAutoHideCompleted] = useState(true)
@@ -291,6 +296,7 @@ export default function App() {
                   connected: isConnected,
                   error: connectionError,
                   hasRideData: !!rideData,
+                  glassesActive,
                   currentRideId,
                   rideHistory: rideHistory.length,
                   pollInterval,

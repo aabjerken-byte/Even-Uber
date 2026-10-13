@@ -24,6 +24,14 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddScoped<IUberAuthService, UberAuthService>();
 builder.Services.AddScoped<IUberRideService, UberRideService>();
 
+// Pushes ride data to the Even Hub display app (same endpoint the iOS
+// companion app posts to).
+builder.Services.AddHttpClient<IEvenHubPublisher, EvenHubPublisher>()
+    .ConfigureHttpClient(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(5);
+    });
+
 // Configure HttpClient for Uber API calls
 builder.Services.AddHttpClient<IUberRideService, UberRideService>()
     .ConfigureHttpClient(client =>

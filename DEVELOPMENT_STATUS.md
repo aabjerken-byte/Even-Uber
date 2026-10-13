@@ -1,502 +1,252 @@
-# Even Uber – Development Status Report
-**Date**: August 14, 2026  
-**Status**: Phase 1 Scaffolding Complete ✅
+# Even Uber – Development Status
+
+**Updated**: August 17, 2026
+**Previous update**: August 14, 2026 (Phase 1 scaffolding)
 
 ---
 
-## Executive Summary
+## Summary
 
-The Even Uber project is **scaffolded and ready for iOS development**. The Even Hub display app is **fully functional and tested** with mock data. All Swift source files for the iOS companion app are complete and ready to be imported into an Xcode project.
+The macOS-side work that Phase 1 deferred is done. The Xcode project exists, the
+app builds and its tests pass against the iOS SDK, and the whole chain —
+notification → parse → relay → render, map included — has been run end to end on
+the simulator and in CI.
 
-### Quick Stats
-- **React Display App**: ✅ **WORKING** (tested with mock data)
-- **Swift iOS App Files**: ✅ **COMPLETE** (9 files, 400+ lines)
-- **Data Models**: ✅ **MATCHING** (iOS ↔ React)
-- **Notification Parser**: ✅ **READY** (90%+ accuracy regex engine)
-- **HTTP Communication**: ✅ **IMPLEMENTED** (localhost IPC)
-
----
-
-## What's Done
-
-### Phase 1A: Even Hub Display App (React + TypeScript) ✅
-
-**Status**: Fully functional, tested with mock ride data
-
-**Working Components**:
-- ✅ Vite dev server (running at `http://127.0.0.1:3000`)
-- ✅ Express backend server (handling API endpoints)
-- ✅ React components (RideCard, ETADisplay, LocationMap, StatusView)
-- ✅ TypeScript models (RideData interface)
-- ✅ Green monochrome styling (optimized for 576×288 G2 display)
-- ✅ Polling mechanism (2-second intervals to fetch ride data)
-- ✅ Mock data testing verified
-
-**Verified Features**:
-```
-Display Output (from screenshot):
-├─ Header: "🚗 Even Uber - Real-time Uber tracking on G2 AR glasses"
-├─ Driver Card: "John D. ⭐ 4.9 | Silver Toyota Prius | ABC123"
-├─ ETA Section: "3 MIN ON THE WAY | Driver heading to your location"
-└─ Map: Driver position (0.1 mi away) relative to user location
-```
-
-**API Endpoints Working**:
-- `POST /api/ride-update` — Receive ride data from iOS app
-- `GET /api/ride` — Fetch current ride (polling)
-- `GET /health` — Health check
-- `POST /api/ride-clear` — Clear ride (testing)
-- `GET /api/status` — Server status
-
-### Phase 1B: iOS Companion App (Swift) ✅
-
-**Status**: All source files complete, ready for Xcode integration
-
-**Completed Swift Files** (1,200+ lines total):
-1. **RideData.swift** (62 lines)
-   - Codable struct matching React model
-   - Optional fields for lat/lng
-   - Custom CodingKeys for JSON serialization
-   - Default initializer with sensible defaults
-
-2. **NotificationParser.swift** (163 lines)
-   - Regex extraction for: name, rating, vehicle, color, plate, ETA
-   - 90%+ accuracy on Uber notification formats
-   - Graceful handling of missing fields
-   - Pattern matching for 3+ format variations
-
-3. **EvenHubClient.swift** (88 lines)
-   - HTTP POST to Even Hub app
-   - Connection status tracking
-   - Timeout configuration (5s request, 10s resource)
-   - Error handling + logging
-
-4. **UberNotificationListener.swift** (101 lines)
-   - UNUserNotificationCenterDelegate implementation
-   - Detects Uber app notifications
-   - Triggers parsing and relay to Even Hub
-   - Foreground + background notification handling
-
-5. **NotificationPermissions.swift** (67 lines)
-   - Request notification permission
-   - Check authorization status
-   - Open Settings app for permission management
-   - Status change callbacks
-
-6. **EvenUberCompanionApp.swift** (35 lines)
-   - SwiftUI @main app entry point
-   - AppDelegate for initialization
-   - Notification handler setup on launch
-
-7. **ContentView.swift** (152 lines)
-   - Main UI showing connection status
-   - Display last received notification
-   - Permission request button
-   - Navigation to settings
-   - Error display
-
-8. **StatusView.swift** (72 lines)
-   - Connection status indicator (🟢 connected / 🔴 disconnected)
-   - Permission status display
-   - Step-by-step instructions
-   - Manual connection check button
-
-9. **SettingsView.swift** (127 lines)
-   - Permission configuration UI
-   - Server configuration display (URL, endpoints)
-   - App info and debug section
-   - Link to open Settings app
-
-### Phase 1C: Xcode Setup Guide ✅
-
-**Status**: Comprehensive documentation complete
-
-- **XCODE_SETUP.md** (300+ lines)
-  - Step-by-step Xcode project creation
-  - File addition instructions
-  - Signing & capabilities configuration
-  - Info.plist permissions setup
-  - Testing on simulator and device
-  - Troubleshooting guide
-  - Mock notification testing instructions
+One thing still needs flagging: **the notification-interception design cannot
+work on iOS.** No public API lets one app read another app's notifications, so
+the companion app cannot observe the official Uber app. The parser, relay,
+location and display all work and are reusable; only that first hop is blocked.
+See [`ios-companion/NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md).
 
 ---
 
-## Architecture & Data Flow
+## What changed since August 14
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ USER ORDERS UBER RIDE IN OFFICIAL APP                      │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ UBER SENDS NOTIFICATION TO iOS SYSTEM                       │
-│ Notification payload:                                       │
-│  - Title: "Your Uber is arriving"                           │
-│  - Body: "John D. (4.9★) is 3 mins away in a Silver..."   │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ iOS COMPANION APP RECEIVES NOTIFICATION                     │
-│ (UberNotificationListener listening in background)          │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ NOTIFICATION PARSER EXTRACTS DATA                           │
-│ RegEx patterns extract:                                     │
-│  - driverName: "John D."                                   │
-│  - driverRating: 4.9                                       │
-│  - vehicleColor: "Silver"                                  │
-│  - vehicleMake: "Toyota"                                   │
-│  - vehicleModel: "Prius"                                   │
-│  - licensePlate: "ABC123"                                  │
-│  - etaMinutes: 3                                           │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ HTTP POST TO EVEN HUB WEB APP                               │
-│ URL: http://127.0.0.1:3000/api/ride-update                │
-│ Payload: RideData struct (JSON)                            │
-│ Latency: <500ms                                            │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ EVEN HUB REACT APP RECEIVES DATA                            │
-│ (Express server stores in memory)                           │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ REACT COMPONENTS RE-RENDER                                  │
-│ RideCard displays:                                          │
-│  - Driver info card (name, rating, vehicle, plate)        │
-│  - ETA countdown (3 MINUTES AWAY)                          │
-│  - Location map (driver vs requester position)             │
-│ Styling: 576×288 green monochrome (G2 optimized)          │
-└──────────────────────┬──────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ EVEN HUB SDK RENDERS TO G2 GLASSES                          │
-│ Display shows on 576×288 micro-LED display                 │
-│ User sees driver info, ETA, map in AR                      │
-└─────────────────────────────────────────────────────────────┘
-```
+### Xcode project created
 
----
+`ios-companion/EvenUberCompanion.xcodeproj` is generated by
+[XcodeGen](https://github.com/yonaskolb/XcodeGen) from `ios-companion/project.yml`
+and committed. It contains an app target and a unit-test target, a shared
+scheme, an asset catalogue, and a generated `Info.plist`.
 
-## Notification Parser Capabilities
+Sources moved from a flat directory into the layout the README already
+documented (`App/`, `Models/`, `Notification/`, `Network/`, `Permissions/`,
+`UI/`).
 
-The regex engine can parse various Uber notification formats:
+### Swift sources did not compile — now they do
 
-```
-Example 1: "John is 3 mins away in a White Toyota Prius (ABC123)"
-├─ Name: "John" (first capital letter, optional middle initial)
-├─ ETA: 3
-├─ Vehicle: "White Toyota Prius"
-└─ Plate: "ABC123"
+The August 14 report listed all nine Swift files as complete. They parsed, but
+they did not type-check. CI reported green because it only ran `swiftc -parse`,
+which checks syntax and never resolves types.
 
-Example 2: "Driver Sarah M. (4.8★) arriving in Silver Honda Civic"
-├─ Name: "Sarah M."
-├─ Rating: 4.8
-├─ Vehicle: "Silver Honda Civic"
-└─ No plate (handles gracefully)
+Fixed:
 
-Example 3: "Your driver John D. in a Blue Ford Focus (XYZ789)"
-├─ Name: "John D."
-├─ Vehicle: "Blue Ford Focus"
-└─ Plate: "XYZ789"
-```
+| Problem | Fix |
+|---|---|
+| `ContentView`/`StatusView` declared `@ObservedObject` on plain classes | `NotificationPermissions` and `UberNotificationListener` now conform to `ObservableObject` |
+| `.onReceive(listener.$onNotificationReceived)` — `$` projection on a plain closure property | Replaced with `@Published` `lastRide` / `lastError`, observed directly |
+| `StatusView` referenced `listener.isConnected` and `listener.checkConnection` — neither existed | Both added, backed by `EvenHubClient` |
+| `NotificationPermissions` used `UIApplication` without importing UIKit | `import UIKit` added |
+| `.font(.monospaced(.body)())` — not valid SwiftUI | `.monospaced()` |
+| `AppDelegate` declared inside the `@main` file | Split into `App/AppDelegate.swift` |
 
-**Extraction Accuracy**: 90%+ on real Uber notifications
+### Parser logic bugs
 
----
+Two extraction bugs meant the parser produced wrong output on the project's own
+example notifications:
 
-## Current Test Verification
+- **Driver name**: the first pattern matched any capitalised word pair, so
+  `"Your Uber is arriving John D. …"` returned **"Your Uber"** as the driver.
+  Now uses context-anchored patterns (explicit "Driver X" label, name adjacent
+  to a rating, name before "is/has") with a stopword filter for boilerplate and
+  pronouns.
+- **Vehicle make/model**: the pattern `(\w+)\s+(\w+)` took the *first* two words
+  of the notification and checked those against the known-makes list. Since the
+  first two words are never the car, make and model came back **empty every
+  time**. Now scans for known makes anywhere in the text, with a positional
+  `in a <Colour> <Make> <Model>` fallback for unlisted makes.
 
-**Even Hub Display App - Tested ✅**
+Also fixed: licence-plate extraction could pick up a rating; `EvenHubClient`
+had a path where the completion handler was never called, which would hang the
+listener's error handling.
 
-When posting mock data:
-```json
-{
-  "driverName": "John D.",
-  "driverRating": 4.9,
-  "vehicleMake": "Toyota",
-  "vehicleModel": "Prius",
-  "vehicleColor": "Silver",
-  "licensePlate": "ABC123",
-  "etaMinutes": 3,
-  "driverLat": 37.7749,
-  "driverLng": -122.4194,
-  "requesterLat": 37.7755,
-  "requesterLng": -122.4180,
-  "timestamp": "2026-08-14T12:00:00Z"
-}
-```
+### Tests
 
-**Result**: 
-- ✅ Server receives POST successfully
-- ✅ React app fetches data via polling
-- ✅ Components render correctly
-- ✅ Green monochrome styling applied
-- ✅ Map calculates distance (0.1 mi away)
-- ✅ All fields display correctly
-- ✅ No console errors
+`EvenUberCompanionTests/NotificationParserTests.swift` — referenced by the
+README since Phase 1 but never written — now exists, covering every supported
+format, ETA and rating variants, graceful degradation, and rejection of
+non-ride notifications.
 
----
+### CI now actually builds
 
-## What's Next: The 5-Step Deployment Path
+`.github/workflows/ios-build.yml` replaced `swiftc -parse` with
+`xcodebuild build-for-testing` + `xcodebuild test-without-building` against a
+simulator. It also picks the newest available iPhone runtime dynamically rather
+than pinning an Xcode version that breaks when GitHub rotates runner images.
 
-### Step 1: Create Xcode Project (On macOS)
-**Time**: 15 minutes  
-**Action**: Follow `ios-companion/XCODE_SETUP.md`
-- [ ] Create new iOS 16+ app in Xcode
-- [ ] Add 9 Swift files
-- [ ] Configure signing & team
-- [ ] Enable Push Notifications capability
-- [ ] Set Info.plist permissions
+### Map now works
 
-**Success**: App builds without errors
+The map rendered "Location data unavailable" on every real ride, because
+notification text carries no coordinates and nothing else supplied any.
 
-### Step 2: Test on Simulator
-**Time**: 10 minutes  
-**Action**: 
-- [ ] Run on iOS simulator (⌘R)
-- [ ] Grant notification permission
-- [ ] Send mock notification from Xcode
-- [ ] Verify NotificationListener captures it
-- [ ] Check parsing in console output
+- **iOS**: new `LocationProvider` (CoreLocation) supplies the requester's real
+  position; `UberNotificationListener` attaches it to every parsed ride via
+  `RideData.withRequesterLocation(latitude:longitude:)`. Added
+  `NSLocationWhenInUseUsageDescription`, and a Location row in the app UI.
+- **Display**: `LocationMap` now renders three states — both pins, requester
+  only (you at centre plus an ETA-derived range ring, explicitly labelled an
+  estimate), or nothing. It deliberately does **not** draw a guessed driver pin.
+- **Distance maths**: the old code treated a degree of longitude as equal to a
+  degree of latitude, overstating east-west distance by ~21% at San Francisco's
+  latitude. Replaced with haversine, validated against references (1° latitude =
+  69.09 mi; 1° longitude at 60°N = exactly half the equatorial value). The
+  project's own mock coordinates went from a reported "0.1 mi" to the correct
+  459 ft.
+- **Zero-coordinate bug**: `driverLat && driverLng && …` treated a valid
+  coordinate of `0` as absent. Now an explicit finite-number check.
 
-**Success**: Mock notification parsed correctly
+The driver's own coordinates still require the Uber API path — see
+[`NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md).
 
-### Step 3: Test on Real Device
-**Time**: 20 minutes  
-**Action**:
-- [ ] Connect iPhone 14+ via USB
-- [ ] Trust computer on device
-- [ ] Run app (⌘R)
-- [ ] Grant notification permission in Settings
-- [ ] Start Even Hub web app (`npm run dev`)
-- [ ] Verify connection status shows 🟢 Connected
-- [ ] Send mock data to Even Hub
-- [ ] Confirm iOS app relays it successfully
+### Glasses rendering implemented
 
-**Success**: iOS app sends HTTP POST to Even Hub, React app displays it
+`@evenrealities/even_hub_sdk` was a dependency that nothing imported, so step 8
+of the data flow — "Even Hub SDK renders to G2 micro-LED" — did not exist. The
+display rendered to a browser and nothing reached the glasses.
 
-### Step 4: Test with Real Uber Ride
-**Time**: 30-60 minutes (depends on Uber availability)  
-**Action**:
-- [ ] Both apps running (iOS companion + Even Hub)
-- [ ] Order an Uber ride in official app
-- [ ] Verify notification captured by companion app
-- [ ] Check data appears in Even Hub display
-- [ ] Validate all fields are correct
-- [ ] Verify map shows accurate distance
+It also could not have worked the way the docs described. The SDK is a WebView
+bridge with an explicit container API; there is no HTML/CSS path to the panel.
+New `even-hub-display/src/glasses/` implements it: bridge acquisition, a
+validated six-container layout, incremental text updates, and canvas
+rasterisation for the map. See
+[`GLASSES_RENDERING.md`](even-hub-display/GLASSES_RENDERING.md), including two
+details that still need a real device to confirm.
 
-**Success**: End-to-end flow works with real ride data
+Outside the Even App WebView the whole layer no-ops, so browser development is
+unchanged.
 
-### Step 5: Deploy to G2 Glasses
-**Time**: 15 minutes  
-**Action**:
-- [ ] Build React app for production: `npm run build`
-- [ ] Package with Even Hub: `evenhub pack --output EvenUber.ehpk`
-- [ ] Upload `.ehpk` to Even Hub Console
-- [ ] Deploy to G2 glasses
-- [ ] Test on hardware
+### Ride lifecycle and honest ETA
 
-**Success**: Driver info displays on G2 glasses in AR
+- `RideStatus` (`enroute`/`arriving`/`arrived`/`completed`/`cancelled`) added to
+  both the Swift and TypeScript models.
+- The parser previously required an ETA, so **"Your driver has arrived" was
+  discarded** — the one message that should end the display. Transition updates
+  (arriving / arrived / completed / cancelled) are now accepted without a name
+  or ETA. The arriving case was itself missed by the first fix and caught in a
+  later review pass — "Your driver is arriving now" was still being dropped.
+- The server merges updates instead of replacing, so a bare arrival notice no
+  longer blanks the driver card, and it ignores terminal updates that arrive
+  with no ride in progress (otherwise a stray receipt raised a phantom card).
+- `ETADisplay` decremented a local `setInterval` counter, so after the first
+  notification the number on the glasses was **invented by a timer**. It is now
+  derived from the ride's timestamp and degrades to "ETA UNKNOWN" past a grace
+  period.
+- Rides now expire: 15 minutes for en-route, 60 seconds after a terminal state.
+
+### Backend wired to the display
+
+`src/backend` was orphaned — nothing referenced it and CI never built it. It now
+maps Uber's nested, snake_case model onto the display's flat payload
+(`EvenHubRideUpdate`) and posts to the same `/api/ride-update` endpoint the iOS
+app uses, making backend and phone interchangeable producers. Added
+`POST /api/rides/{rideId}/publish`, plus a test project.
+
+This is the only path that can carry driver coordinates.
+
+### Even Hub display app fixes
+
+Three defects blocked the documented workflow:
+
+- `npm run dev` started Vite **and** Express both on port 3000. Vite won,
+  Express died, and `--kill-others` tore down the whole thing. Vite moved to
+  5173; port 3000 stays the API, because that address is hardcoded in the iOS
+  app.
+- `node --loader ts-node/esm server.ts` fails on Node 22 with an unreadable
+  error, so the server could not start at all. Now runs via `tsx`.
+- `npm run build` failed — `vite.config.ts` sets `minify: 'terser'` but terser
+  was not a dependency. Added. (This was Step 5 of the deployment path, so
+  packaging for G2 was blocked.)
+- `npm start` pointed at `dist/server.js`, which `tsc --noEmit` never produces.
+  Now runs the server directly.
 
 ---
 
-## File Locations
+## Verified on macOS
 
-**Critical iOS Files**:
-```
-EvenUber/ios-companion/
-├── RideData.swift                ← Data model
-├── NotificationParser.swift      ← Parsing engine
-├── EvenHubClient.swift           ← Network layer
-├── UberNotificationListener.swift ← Notification handler
-├── NotificationPermissions.swift  ← Permission manager
-├── EvenUberCompanionApp.swift    ← Entry point
-├── ContentView.swift             ← Main UI
-├── StatusView.swift              ← Status display
-├── SettingsView.swift            ← Settings UI
-└── XCODE_SETUP.md                ← Setup instructions
-```
+Xcode 26.6 / iOS 26.5 SDK / iPhone 17 Pro simulator.
 
-**Even Hub React App** (Already working):
-```
-EvenUber/even-hub-display/
-├── src/App.tsx                   ← Polling + state management
-├── src/components/RideCard.tsx   ← Display component
-├── server.ts                     ← Express backend
-├── package.json                  ← Dependencies installed
-└── vite.config.ts                ← Build configuration
-```
+| Check | Result |
+|---|---|
+| `RideData` + `NotificationParser` compile (macOS SDK) | ✅ |
+| iOS build + tests against the iOS SDK | ✅ 23 pass |
+| Swift `JSONEncoder` output matches the React `RideData` model | ✅ |
+| `EvenUberCompanion.xcodeproj` / `Info.plist` well-formed | ✅ `plutil -lint` |
+| All 10 sources + test target present in project | ✅ |
+| React app type-check (`tsc --noEmit`) | ✅ |
+| React production build | ✅ |
+| Haversine distance vs known references | ✅ |
+| Express server boots, all 5 endpoints respond | ✅ |
+| Swift-encoded JSON accepted by `POST /api/ride-update` | ✅ |
+| UI renders at 576×288 with live data, no console errors | ✅ |
+| Display unit tests (vitest) | ✅ 45 pass |
+| Backend builds and tests (.NET 8) | ✅ 19 pass |
+| Backend payload accepted by the display, two-pin map renders | ✅ |
+| Glasses layer no-ops cleanly in a browser | ✅ |
 
----
+## Not yet verified
 
-## Dependencies Installed
+- Physical device run (simulator verified)
+- **G2 hardware — the glasses render layer has never run on a device.** Image
+  byte format and text sizing both need confirming; see
+  [`GLASSES_RENDERING.md`](even-hub-display/GLASSES_RENDERING.md)
+- Uber API access (scopes depend on developer-account approval)
 
-### Even Hub (React App)
-- ✅ react@18.2.0
-- ✅ react-dom@18.2.0
-- ✅ typescript@5.0.0
-- ✅ vite@4.3.0
-- ✅ express@4.18.2
-- ✅ @evenrealities/even_hub_sdk (optional, for hardware)
-
-### iOS (Swift)
-- ✅ Xcode 14+ (provides Swift 5.7+)
-- ✅ iOS 16+ SDK
-- ✅ UserNotifications framework (built-in)
+Everything else is verified locally on Xcode 26.6 / iOS 26.5 SDK and in CI.
 
 ---
 
-## Performance Targets (Phase 1)
+## Next steps
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Notification capture latency | <100ms | Ready to test |
-| Parsing accuracy | 90%+ | Implemented |
-| HTTP send latency | <500ms | Implemented |
-| Display render time | <300ms | ✅ Verified |
-| Polling interval | 2 seconds | ✅ Verified |
-| Battery impact | <3% per hour | Ready to test |
-| ETA update smoothness | Every 2s | ✅ Verified |
-| Map accuracy | ±50m | ✅ Verified |
+1. **Decide the data source.** The notification route is a demo harness, not a
+   production path, and it can never supply driver coordinates. `src/backend/`
+   already scaffolds Uber OAuth — confirm what ride scopes your Uber developer
+   account can actually access before investing further either way.
+2. **Device test** on a physical iPhone. Set a signing team, and point
+   `EvenHubClient` at your Mac's LAN address — `127.0.0.1` on the phone is the
+   phone (see `XCODE_SETUP.md`).
+3. **Wire driver coordinates** from the backend into `POST /api/ride-update`.
+   `LocationMap` already switches to the two-pin view the moment
+   `driverLat`/`driverLng` arrive — no display work needed.
+4. **Package for G2**: `npm run build`, then `evenhub pack`.
 
 ---
 
-## Acceptance Criteria Checklist
+## Acceptance criteria
 
-### iOS App
-- [ ] App compiles in Xcode
-- [ ] Runs on iOS 16+ device
-- [ ] User can grant notification permission
-- [ ] Captures real Uber notifications
-- [ ] Parses 90%+ of formats correctly
-- [ ] Sends data to Even Hub within 500ms
-- [ ] Handles missing/malformed data gracefully
-- [ ] <1% notification miss rate
-- [ ] Battery impact < 3% per hour
-
-### Even Hub Display
-- [x] Renders correctly with mock data
-- [x] Displays all fields (driver, vehicle, ETA, map)
-- [x] Updates every 2 seconds
-- [x] Green monochrome styling works
+### Even Hub display
+- [x] Renders with mock data
+- [x] Displays driver, vehicle, ETA, map
+- [x] Polls every 2 seconds
+- [x] Green monochrome styling at 576×288
 - [x] No console errors
-- [x] Responsive layout works
+- [x] Production build succeeds
+
+### iOS app
+- [x] Xcode project exists and is committed
+- [x] Sources type-check
+- [x] Parser unit tested
+- [x] Compiles against the iOS SDK
+- [x] Runs in the iOS simulator
+- [x] Relays a parsed ride to Even Hub, with real coordinates attached
+- [ ] Runs on a physical iOS 16+ device
 
 ### Integration
-- [ ] iOS app → Even Hub HTTP flow works
-- [ ] Real Uber notification triggers display
-- [ ] Map shows accurate distance
-- [ ] ETA updates in real-time
-- [ ] G2 glasses display works
+- [x] Swift-encoded payload accepted by the display server
+- [x] End-to-end: pushed notification → parsed → relayed → rendered on the display
+- [x] Map renders with a real position
+- [ ] End-to-end on a physical device
+- [ ] G2 glasses display
 
----
-
-## Known Issues & Notes
-
-### None Currently
-All scaffolding is complete and tested. No known issues with the codebase.
-
-### Future Improvements (Phase 2+)
-- Voice commands for ride requests
-- Driver chat/messaging
-- Trip history and receipts
-- Multiple simultaneous rides
-
----
-
-## How to Get Started Right Now
-
-### Option A: Continue on macOS
-1. Open `EvenUber/ios-companion/XCODE_SETUP.md`
-2. Follow the 10-step setup guide
-3. Create Xcode project
-4. Build and test on simulator
-
-### Option B: Continue Development on This Machine (Windows)
-1. Even Hub display app is already working
-2. Further testing requires iOS device/macOS
-3. Document any additional requirements
-
-### Option C: Prepare for Integration
-1. Review the data flow diagram
-2. Test the React app with more mock data scenarios
-3. Create test suite for NotificationParser
-4. Document Uber notification format variations
-
----
-
-## Command Reference
-
-### Even Hub Display (Already Running)
-```bash
-cd EvenUber/even-hub-display
-
-# Start development
-npm run dev
-
-# Build for production
-npm run build
-
-# Test with mock data
-curl -X POST http://127.0.0.1:3000/api/ride-update \
-  -H "Content-Type: application/json" \
-  -d '{"driverName":"John D.","driverRating":4.9, ... }'
-```
-
-### iOS Companion (Requires Xcode on macOS)
-```bash
-# Build
-⌘B
-
-# Run on simulator
-⌘R
-
-# Run tests
-⌘U
-
-# View device logs
-⌘⇧2 (Xcode → Window → Devices)
-```
-
----
-
-## Success Indicators
-
-✅ **Phase 1 Scaffolding**: 100% Complete  
-✅ **React Display App**: Fully functional  
-⏳ **iOS Companion App**: Ready for Xcode (requires macOS)  
-⏳ **Integration Testing**: Pending device access  
-⏳ **Hardware Testing**: Pending G2 glasses  
-
----
-
-## Resources
-
-- **Even Hub Docs**: https://hub.evenrealities.com/docs
-- **iOS NotificationCenter**: https://developer.apple.com/documentation/usernotifications
-- **Swift Regex**: https://www.swift.org/blog/swift-regex/
-- **Community Discord**: https://discord.gg/GsuDkKDXDe
-
----
-
-## Questions or Issues?
-
-- Review `XCODE_SETUP.md` for Xcode-specific issues
-- Check `BUILD_SPEC.md` for technical requirements
-- See `README.md` for project overview
-- Check error logs in Xcode console
-
-**Last Updated**: August 14, 2026
+Blocked by design, not by effort:
+- [ ] ~~Captures real Uber notifications~~ — not possible on iOS; see
+  [`NOTIFICATION_ACCESS.md`](ios-companion/NOTIFICATION_ACCESS.md)

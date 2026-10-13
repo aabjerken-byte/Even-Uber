@@ -1,260 +1,193 @@
-# Even Uber Companion - Xcode Setup Guide
+# Even Uber Companion — Xcode Setup
 
-This guide explains how to set up the Even Uber Companion iOS app in Xcode.
+The Xcode project now exists and is committed. You no longer need to create one
+by hand — open it and build.
 
 ## Prerequisites
 
 - **macOS 13+**
-- **Xcode 14+** ([download from App Store](https://apps.apple.com/us/app/xcode/id497799835))
-- **iOS 16+ device** (iPhone)
-- **Apple Developer Account** (free - for code signing)
+- **Xcode 15+** ([Mac App Store](https://apps.apple.com/us/app/xcode/id497799835))
+- **Apple ID** (a free one is enough to run on your own device)
+- **iOS 16+** device or simulator
 
-## Step 1: Create an Xcode Project
-
-### Option A: Create from Scratch (Recommended)
-
-1. **Open Xcode**
-2. **File** → **New** → **Project**
-3. Choose **iOS** → **App**
-4. Configure:
-   - **Product Name**: `EvenUberCompanion`
-   - **Team ID**: Your Apple ID
-   - **Organization Identifier**: `com.yourname` (e.g., `com.example`)
-   - **Bundle Identifier**: `com.yourname.evenubercompanion`
-   - **Interface**: SwiftUI
-   - **Language**: Swift
-5. Click **Create**
-
-Xcode will generate a new project structure. You'll keep the `EvenUberCompanionApp.swift` and `ContentView.swift` from the generated template.
-
-### Option B: Clone and Configure
-
-If you prefer, clone the Swift files from this folder and manually add them to your Xcode project:
+After installing Xcode, point the command line tools at it and accept the
+licence — otherwise `xcodebuild` and `swiftc` refuse to run:
 
 ```bash
-# On macOS, in the EvenUber/ios-companion folder
-git clone <repo> and copy the .swift files into your Xcode project
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
 ```
 
-## Step 2: Add Swift Files
-
-Once you have an Xcode project:
-
-1. **In Xcode**, select your project in the Navigator (left panel)
-2. Select the **EvenUberCompanion** target
-3. Go to **Build Phases** → **Compile Sources**
-4. Click **+** and add these files:
-   - `EvenUberCompanionApp.swift`
-   - `AppDelegate.swift` *(if not auto-generated)*
-   - `ContentView.swift`
-   - `StatusView.swift`
-   - `SettingsView.swift`
-   - `RideData.swift`
-   - `NotificationParser.swift`
-   - `EvenHubClient.swift`
-   - `UberNotificationListener.swift`
-   - `NotificationPermissions.swift`
-
-Alternatively, you can drag and drop the files directly into Xcode's file navigator.
-
-## Step 3: Configure Project Settings
-
-### Bundle Identifier
-1. Select **EvenUberCompanion** (top-level) in the Navigator
-2. Select **EvenUberCompanion** target
-3. Go to **Signing & Capabilities**
-4. Set a unique **Bundle Identifier** (e.g., `com.yourname.evenubercompanion`)
-
-### Team
-1. In **Signing & Capabilities**, select your Apple ID under **Team**
-2. If you don't have a team, click **Add Account** to sign in with your Apple ID
-
-### Minimum iOS Version
-1. Go to **Build Settings**
-2. Search for "iOS Deployment Target"
-3. Set to **16.0** (or later)
-
-## Step 4: Configure App Permissions (Info.plist)
-
-iOS requires explicit permission to read notifications. Add this to your `Info.plist`:
-
-### Method 1: Using Xcode UI
-1. Select **EvenUberCompanion** target
-2. Go to **Info** tab
-3. Click **+** to add a new key
-4. Add:
-   - Key: `NSUserNotificationUsageDescription`
-   - Value: `"We need to read Uber notifications to show your driver on your glasses"`
-
-### Method 2: Edit Plist Directly
-Right-click `Info.plist` → **Open As** → **Source Code** and add:
-
-```xml
-<key>NSUserNotificationUsageDescription</key>
-<string>We need to read Uber notifications to show your driver on your glasses</string>
-```
-
-## Step 5: Configure Capabilities
-
-Enable notifications:
-
-1. Select **EvenUberCompanion** target
-2. Go to **Signing & Capabilities**
-3. Click **+ Capability**
-4. Search for **Push Notifications**
-5. Click it to add
-
-This registers your app to receive notifications.
-
-## Step 6: Update App Delegate
-
-Make sure your app's delegate is properly configured:
-
-1. In `EvenUberCompanionApp.swift`, verify that `AppDelegate` class exists
-2. The app should initialize `UberNotificationListener.shared` on startup
-
-If you generated the project from scratch, Xcode might not include `AppDelegate`. You'll need to add it manually.
-
-## Step 7: Build and Run
-
-### On Simulator (for testing)
-```bash
-# In Xcode
-⌘B    # Build
-⌘R    # Run on Simulator
-```
-
-### On Physical Device
-1. Plug in your iPhone (USB)
-2. Trust the computer on the device
-3. Select your device in Xcode's toolbar
-4. Press **⌘R** to run
-
-On first run, iOS will prompt:
-- "Allow Even Uber Companion to access your notifications?"
-- Tap **Allow**
-
-## Step 8: Verify Notification Listener
-
-Once running on device:
-
-1. **Settings** → **Notifications** → **Even Uber Companion**
-2. Make sure **Allow Notifications** is **ON**
-3. Toggle **Show as Badges** if desired
-
-Now the app can capture Uber notifications.
-
-## Step 9: Test with Mock Notification (Simulator Only)
-
-### Send a Test Notification
-In Xcode's **Debug Console**, run:
-
-```swift
-let content = UNMutableNotificationContent()
-content.title = "Your Uber is arriving"
-content.body = "John D. (4.9★) is 3 mins away in a Silver Toyota Prius (ABC123)"
-content.threadIdentifier = "uber.ride"
-
-let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
-let request = UNNotificationRequest(identifier: "test", content: content, trigger: trigger)
-
-UNUserNotificationCenter.current().add(request) { error in
-    if let error = error {
-        print("Error: \(error.localizedDescription)")
-    }
-}
-```
-
-Or in the **Scheme** settings:
-1. Go to **Product** → **Scheme** → **Edit Scheme**
-2. Under **Run** → **Pre-actions**, add a script to send test notifications
-
-## Step 10: Connect to Even Hub
-
-### Start the Even Hub Web App
-On your Mac or another computer:
+## 1. Open the project
 
 ```bash
-cd EvenUber/even-hub-display
+cd ios-companion
+open EvenUberCompanion.xcodeproj
+```
+
+## 2. Set your signing team
+
+Simulator builds need no signing. To run on a physical device:
+
+1. Select the **EvenUberCompanion** target → **Signing & Capabilities**
+2. Under **Team**, pick your Apple ID (**Add an Account…** if the list is empty)
+3. Change the **Bundle Identifier** from `com.evenuber.companion` to something
+   unique to you, e.g. `com.yourname.evenubercompanion` — free accounts can't
+   claim an identifier someone else has registered
+
+No team is committed to the project, so this is the one field you must set.
+
+## 3. Build and run
+
+| Action | Shortcut |
+|---|---|
+| Build | ⌘B |
+| Run | ⌘R |
+| Test | ⌘U |
+
+Or from the command line:
+
+```bash
+cd ios-companion
+xcodebuild build -project EvenUberCompanion.xcodeproj -scheme EvenUberCompanion \
+  -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+```bash
+cd ios-companion
+xcodebuild test -project EvenUberCompanion.xcodeproj -scheme EvenUberCompanion \
+  -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+## 4. Connect to the Even Hub display app
+
+In a separate terminal:
+
+```bash
+cd even-hub-display
+npm install
 npm run dev
 ```
 
-This starts the Even Hub app at `http://127.0.0.1:3000`
+That serves the API on `http://127.0.0.1:3000` and the UI on
+`http://127.0.0.1:5173`.
 
-### On iPhone (Same Network)
-Make sure your iPhone is on the same WiFi network as your development Mac.
+The companion app posts to `http://127.0.0.1:3000` by default. On the
+**simulator**, that loopback address resolves to your Mac, so it connects with
+no further setup. On a **physical device**, `127.0.0.1` is the phone itself —
+point the client at your Mac's LAN address instead:
 
-The app will automatically try to connect to `127.0.0.1:3000`.
+```swift
+EvenHubClient.shared.setBaseURL("http://192.168.1.42:3000")
+```
 
-### Test Connection
-1. Open the Even Uber Companion app on device
-2. Check the "Even Hub Connection" status (should show 🟢 Connected)
-3. Send a test ride notification
-4. Check the Even Hub web app in your browser at `http://127.0.0.1:3000`
-5. The ride data should appear on the display!
+The value is persisted in `UserDefaults`, and the current setting is shown in
+the app's **Settings** screen.
+
+`Info.plist` already carries the App Transport Security exception
+(`NSAllowsLocalNetworking`) and the `NSLocalNetworkUsageDescription` string
+needed for cleartext HTTP to local addresses — iOS blocks those by default.
+
+Tap the **Even Hub Connection** row in the app to re-check connectivity.
+
+## 5. Testing the pipeline
+
+⚠️ **The app cannot read the official Uber app's notifications.** iOS provides
+no API for that. See **[NOTIFICATION_ACCESS.md](NOTIFICATION_ACCESS.md)** for
+what this means and which integration paths are actually open.
+
+To exercise the parse → relay → display chain, schedule a local notification
+from the app or send one to the simulator:
+
+```bash
+cat > /tmp/uber.apns <<'EOF'
+{
+  "Simulator Target Bundle": "com.evenuber.companion",
+  "aps": {
+    "alert": {
+      "title": "Your Uber is arriving",
+      "body": "John D. (4.9★) is 3 mins away in a Silver Toyota Prius (ABC123)"
+    },
+    "thread-id": "uber.ride"
+  }
+}
+EOF
+xcrun simctl push booted com.evenuber.companion /tmp/uber.apns
+```
+
+You should see the parsed ride appear in the app and on the Even Hub display.
+
+## Project layout
+
+```
+ios-companion/
+├── project.yml                        # XcodeGen spec — source of truth
+├── EvenUberCompanion.xcodeproj        # Generated, committed
+├── EvenUberCompanion/
+│   ├── App/         EvenUberCompanionApp.swift, AppDelegate.swift
+│   ├── Models/      RideData.swift
+│   ├── Notification/ UberNotificationListener.swift, NotificationParser.swift
+│   ├── Network/     EvenHubClient.swift
+│   ├── Permissions/ NotificationPermissions.swift
+│   ├── UI/          ContentView.swift, StatusView.swift, SettingsView.swift
+│   ├── Resources/   Assets.xcassets
+│   └── Info.plist                     # Generated from project.yml
+└── EvenUberCompanionTests/
+    └── NotificationParserTests.swift
+```
+
+### Adding files
+
+Adding a file in Xcode works normally. To keep `project.yml` authoritative,
+regenerate afterwards:
+
+```bash
+brew install xcodegen
+cd ios-companion && xcodegen generate
+```
+
+Anything under `EvenUberCompanion/` is picked up automatically — the spec globs
+the directory rather than listing files.
+
+## Push Notifications capability
+
+Not enabled, and not needed: the app only uses *local* notification permission,
+which requires no entitlement. Adding the Push Notifications capability would
+introduce an `aps-environment` entitlement that free Apple accounts can't sign.
+
+If you later need real remote pushes, add the capability in **Signing &
+Capabilities** and mirror it in `project.yml`:
+
+```yaml
+    entitlements:
+      path: EvenUberCompanion/EvenUberCompanion.entitlements
+      properties:
+        aps-environment: development
+```
 
 ## Troubleshooting
 
-### "Code signing error"
-- Go to **Signing & Capabilities**
-- Select your Apple Team
-- Xcode will auto-generate a provisioning profile
+**"Signing for EvenUberCompanion requires a development team"**
+Set your team (step 2). Simulator-only builds can instead pass
+`CODE_SIGNING_ALLOWED=NO`.
 
-### "Can't connect to 127.0.0.1:3000"
-- Ensure your iPhone is on the same network as your Mac
-- Check the Even Hub web app is running
-- Try using your Mac's IP address instead of `127.0.0.1`
-- Check firewall settings
+**"Failed to register bundle identifier"**
+Someone else owns `com.evenuber.companion`. Change it to your own prefix.
 
-### "Notifications not being captured"
-- Ensure **Notifications** permission is granted in Settings
-- Check that the Uber app is installed and has notification permissions
-- Verify the notification thread identifier matches "uber.ride" (or update the parser)
+**Connection shows red on a physical device**
+`127.0.0.1` on the phone is the phone. Use your Mac's LAN IP (step 4), confirm
+both are on the same network, and allow the connection when iOS prompts for
+local network access.
 
-### "Regex not matching Uber notifications"
-Uber's notification format may vary:
-1. Print the actual notification text: `print(content.body)`
-2. Update the regex patterns in `NotificationParser.swift`
-3. Add test cases to verify
+**"You have not agreed to the Xcode license agreements"**
+Run `sudo xcodebuild -license accept`.
 
-### "Can't find files when building"
-- Drag the Swift files into Xcode's file navigator
-- Make sure the target membership is set:
-  - Select each file
-  - Go to **File Inspector** (right panel)
-  - Check **EvenUberCompanion** under **Target Membership**
-
-## Performance & Battery
-
-Optimizations in the code:
-- ✅ Notifications only processed when they arrive (no polling)
-- ✅ Efficient HTTP requests with 5s timeout
-- ✅ Batching of rapid notifications
-- ✅ Minimal background processing
-
-**Battery impact**: < 3% per hour during active ride
-
-## Security Notes
-
-- 🔒 **No credentials stored** — doesn't handle Uber login
-- 🔒 **Local-only communication** — HTTP only to localhost
-- 🔒 **User-controlled** — requires explicit notification permission
-- 🔒 **No data persistence** — notifications not cached or logged
-
-## Next Steps
-
-1. ✅ Build and run on device
-2. ✅ Grant notification permissions
-3. ✅ Verify connection to Even Hub
-4. ✅ Test with a real Uber ride
-5. ✅ Connect to G2 glasses via Even Hub
+**Regex not matching a real Uber notification**
+Log the text (`print(content.body)`), add it as a fixture in
+`NotificationParserTests.swift`, then adjust the patterns in
+`NotificationParser.swift` until the test passes.
 
 ## Resources
 
-- [Apple Notifications Documentation](https://developer.apple.com/documentation/usernotifications)
-- [Swift Regex Guide](https://www.swift.org/blog/swift-regex/)
-- [Xcode Help](https://help.apple.com/xcode)
-
-## Questions?
-
-Check the [Even Uber README](./README.md) or open an issue in the project repository.
+- [UserNotifications framework](https://developer.apple.com/documentation/usernotifications)
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen)

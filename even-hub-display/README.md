@@ -33,16 +33,24 @@ npm install
 npm run dev
 ```
 
-This starts a local dev server at `http://127.0.0.1:3000`
+This starts two processes:
+
+- **Express API** on `http://127.0.0.1:3000` — the endpoint the iOS companion
+  app posts to, and the server that hosts the production bundle.
+- **Vite dev server** on `http://127.0.0.1:5173` — the UI with hot reload.
 
 ### 3. Check Connection
 
 Open your browser and visit:
 ```
-http://127.0.0.1:3000/
+http://127.0.0.1:5173/
 ```
 
 You should see a status page saying "Waiting for ride data..."
+
+For the production bundle instead, run `npm run build && npm start` and visit
+`http://127.0.0.1:3000/`. The API always lives on port 3000 — that address is
+hardcoded in the iOS app.
 
 ### 4. Send Test Data
 

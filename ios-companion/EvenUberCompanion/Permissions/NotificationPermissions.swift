@@ -1,29 +1,33 @@
 import Foundation
+import UIKit
 import UserNotifications
 
 /// Manages notification permissions
-class NotificationPermissions {
+final class NotificationPermissions: ObservableObject {
 
     static let shared = NotificationPermissions()
 
-    private(set) var isAuthorized = false
+    @Published private(set) var isAuthorized = false
+    @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
+
     var onAuthorizationStatusChanged: ((Bool) -> Void)?
 
     private init() {
         checkAuthorizationStatus()
     }
 
-    /// Request permission to read notifications
+    /// Request permission to post notifications
     func requestPermission(completion: @escaping (Bool) -> Void) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 self?.isAuthorized = granted
+                self?.authorizationStatus = granted ? .authorized : .denied
 
                 if granted {
                     print("✅ Notification permission granted")
                 } else {
                     print("❌ Notification permission denied")
-                    if let error = error {
+                    if let error {
                         print("   Error: \(error.localizedDescription)")
                     }
                 }
@@ -39,7 +43,9 @@ class NotificationPermissions {
         UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
             DispatchQueue.main.async {
                 let authorized = settings.authorizationStatus == .authorized
+                    || settings.authorizationStatus == .provisional
                 self?.isAuthorized = authorized
+                self?.authorizationStatus = settings.authorizationStatus
 
                 switch settings.authorizationStatus {
                 case .authorized:
@@ -55,11 +61,13 @@ class NotificationPermissions {
                 @unknown default:
                     print("❓ Unknown notification status")
                 }
+
+                self?.onAuthorizationStatusChanged?(authorized)
             }
         }
     }
 
-    /// Open Settings app to notification permissions
+    /// Open the Settings app at this app's notification settings
     func openNotificationSettings() {
         guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
             print("❌ Could not open Settings")

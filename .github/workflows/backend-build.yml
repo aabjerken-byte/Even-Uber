@@ -1,0 +1,42 @@
+name: Build Backend
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/backend/**'
+      - 'src/backend.Tests/**'
+      - '.github/workflows/backend-build.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/backend/**'
+      - 'src/backend.Tests/**'
+  workflow_dispatch:
+
+concurrency:
+  group: backend-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (.NET 8)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/backend.Tests/EvenUber.Backend.Tests.csproj
+
+      - name: Build
+        run: dotnet build src/backend/EvenUber.Backend.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test src/backend.Tests/EvenUber.Backend.Tests.csproj --configuration Release --verbosity normal
