@@ -1,5 +1,5 @@
 import { RideData } from '../models/RideData'
-import { rangeRingMinutes } from '../models/rideTiming'
+import { formatTripDistance, mapPoints, rangeRingMinutes, tripDistance } from '../models/rideTiming'
 import DriverInfo from './DriverInfo'
 import ETADisplay from './ETADisplay'
 import LocationMap from './LocationMap'
@@ -13,6 +13,12 @@ export interface RideCardProps {
  * Optimized for 576x288 monochrome green micro-LED display
  */
 export default function RideCard({ data }: RideCardProps) {
+  const points = mapPoints(data)
+  const distance = tripDistance(data)
+  const distanceCaption = distance
+    ? `${formatTripDistance(distance)}${data.destinationName ? ` to ${data.destinationName}` : ''}`
+    : undefined
+
   return (
     <div className="ride-card">
       <DriverInfo
@@ -25,10 +31,12 @@ export default function RideCard({ data }: RideCardProps) {
       <ETADisplay ride={data} />
 
       <LocationMap
-        driverLat={data.driverLat}
-        driverLng={data.driverLng}
-        requesterLat={data.requesterLat}
-        requesterLng={data.requesterLng}
+        driverLat={points.targetLat}
+        driverLng={points.targetLng}
+        requesterLat={points.youLat}
+        requesterLng={points.youLng}
+        targetLabel={points.targetLabel}
+        distanceCaption={distanceCaption}
         rangeMinutes={rangeRingMinutes(data) ?? undefined}
         status={data.status}
       />

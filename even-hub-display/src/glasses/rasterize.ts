@@ -1,4 +1,5 @@
 import { MAP_HEIGHT, MAP_WIDTH } from './constants'
+import { isCoord } from '../models/geo'
 
 /**
  * Turning the map into something the glasses can display.
@@ -28,9 +29,6 @@ export interface MapRenderInput {
   rangeMinutes?: number
 }
 
-function isCoord(value?: number): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
-}
 
 /**
  * Draw the map to a canvas.

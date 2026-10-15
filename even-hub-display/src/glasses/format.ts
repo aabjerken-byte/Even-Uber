@@ -1,5 +1,11 @@
 import { RideData } from '../models/RideData'
-import { computeEta } from '../models/rideTiming'
+import {
+  computeEta,
+  formatClock,
+  formatTripDistance,
+  tripArrivalTime,
+  tripDistance
+} from '../models/rideTiming'
 import { ContainerKey } from './constants'
 
 /**
@@ -45,16 +51,28 @@ export function formatRide(ride: RideData, now: number = Date.now()): GlassesTex
   const driver = tidy(`${ride.driverName}${rating}`)
 
   const vehicle = tidy(`${ride.vehicleColor} ${ride.vehicleMake} ${ride.vehicleModel}`)
+  const plate = ride.licensePlate ? `Plate ${ride.licensePlate}` : ''
+
+  // On the trip the plate no longer matters and the destination does: the
+  // top line names where you're going, the plate line shows how far is left,
+  // and the status line carries the arrival time.
+  const onTrip = ride.status === 'ontrip'
+  const distance = tripDistance(ride)
+  const arrival = tripArrivalTime(ride, now)
+
+  const top = onTrip && ride.destinationName ? `To ${ride.destinationName}` : driver || 'Driver'
+  const third = onTrip ? (distance ? formatTripDistance(distance) : plate) : plate
+  const status = arrival ? `${eta.label} · ${formatClock(arrival)}` : eta.label
 
   return {
-    driver: truncate(driver || 'Driver', MAX_CHARS.driver),
+    driver: truncate(top, MAX_CHARS.driver),
     vehicle: truncate(vehicle || 'Vehicle details pending', MAX_CHARS.vehicle),
-    plate: truncate(ride.licensePlate ? `Plate ${ride.licensePlate}` : '', MAX_CHARS.plate),
+    plate: truncate(third, MAX_CHARS.plate),
     eta: truncate(
       eta.minutesRemaining !== null ? `${eta.minutesRemaining} MIN` : '--',
       MAX_CHARS.eta
     ),
-    status: truncate(eta.label, MAX_CHARS.status)
+    status: truncate(status, MAX_CHARS.status)
   }
 }
 

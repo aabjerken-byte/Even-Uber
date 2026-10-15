@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { RideData } from '../models/RideData'
-import { computeEta } from '../models/rideTiming'
+import { computeEta, formatClock, tripArrivalTime } from '../models/rideTiming'
 
 export interface ETADisplayProps {
   ride: RideData
 }
 
 /**
- * Estimated pickup time.
+ * Estimated pickup time — or, once the trip is under way, time to the drop-off.
  *
  * The figure is recomputed from the ride's own timestamp rather than counted
  * down locally, so it survives re-renders and backgrounded tabs and reports
@@ -18,6 +18,11 @@ function statusDetail(ride: RideData, overdue: boolean): string {
   switch (ride.status ?? 'enroute') {
     case 'arrived':
       return 'Driver is waiting at the pickup point'
+    case 'ontrip': {
+      const arrival = tripArrivalTime(ride)
+      const where = ride.destinationName ? `Heading to ${ride.destinationName}` : 'On the way to your drop-off'
+      return arrival ? `${where} · arrive ${formatClock(arrival)}` : where
+    }
     case 'completed':
       return 'Trip finished'
     case 'cancelled':

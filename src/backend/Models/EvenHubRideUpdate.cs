@@ -53,6 +53,25 @@ public class EvenHubRideUpdate
     [JsonPropertyName("timestamp")]
     public string Timestamp { get; set; } = string.Empty;
 
+    // Trip fields are omitted rather than sent as null: the display merges
+    // updates, and an explicit null would erase a destination it already knows.
+
+    [JsonPropertyName("tripEtaMinutes")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? TripEtaMinutes { get; set; }
+
+    [JsonPropertyName("destinationName")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? DestinationName { get; set; }
+
+    [JsonPropertyName("destinationLat")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? DestinationLat { get; set; }
+
+    [JsonPropertyName("destinationLng")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? DestinationLng { get; set; }
+
     /// <summary>
     /// Map Uber's ride status onto the display's lifecycle vocabulary.
     /// Unrecognised values fall back to "enroute" rather than inventing a
@@ -63,7 +82,9 @@ public class EvenHubRideUpdate
         "processing" or "accepted" or "en_route" or "enroute" => "enroute",
         "arriving" => "arriving",
         "arrived" or "driver_arrived" => "arrived",
-        "in_progress" or "pickup_complete" or "on_trip" => "enroute",
+        // Rider is in the car. Mapping these to "enroute" used to put the
+        // stale pickup ETA back on the glasses for the whole ride.
+        "in_progress" or "pickup_complete" or "on_trip" => "ontrip",
         "completed" or "dropoff_complete" => "completed",
         "rider_canceled" or "driver_canceled" or "canceled" or "cancelled" => "cancelled",
         "no_drivers_available" => "cancelled",
@@ -91,6 +112,10 @@ public class EvenHubRideUpdate
             DriverLng = ride.DriverLocation?.Longitude,
             RequesterLat = ride.RequesterLocation?.Latitude,
             RequesterLng = ride.RequesterLocation?.Longitude,
+            TripEtaMinutes = ride.Destination?.EtaMinutes,
+            DestinationName = string.IsNullOrWhiteSpace(ride.Destination?.Address) ? null : ride.Destination.Address,
+            DestinationLat = ride.Destination?.Latitude,
+            DestinationLng = ride.Destination?.Longitude,
             Timestamp = (timestampUtc ?? DateTime.UtcNow).ToString("yyyy-MM-ddTHH:mm:ssZ")
         };
     }

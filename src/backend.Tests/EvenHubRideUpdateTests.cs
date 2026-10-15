@@ -73,7 +73,8 @@ public class EvenHubRideUpdateTests
     [InlineData("arriving", "arriving")]
     [InlineData("arrived", "arrived")]
     [InlineData("driver_arrived", "arrived")]
-    [InlineData("in_progress", "enroute")]
+    [InlineData("in_progress", "ontrip")]
+    [InlineData("pickup_complete", "ontrip")]
     [InlineData("completed", "completed")]
     [InlineData("dropoff_complete", "completed")]
     [InlineData("rider_canceled", "cancelled")]
@@ -99,6 +100,34 @@ public class EvenHubRideUpdateTests
         Assert.Equal("enroute", EvenHubRideUpdate.MapStatus("some_future_status"));
         Assert.Equal("enroute", EvenHubRideUpdate.MapStatus(null));
         Assert.Equal("enroute", EvenHubRideUpdate.MapStatus(""));
+    }
+
+    [Fact]
+    public void CarriesTheTripLegOnceUnderWay()
+    {
+        var ride = SampleRide("in_progress");
+        ride.Destination = new DestinationInfo
+        {
+            Latitude = 37.6213, Longitude = -122.3790, EtaMinutes = 25, Address = "SFO Terminal 2"
+        };
+
+        var update = EvenHubRideUpdate.FromRideData(ride);
+
+        Assert.Equal("ontrip", update.Status);
+        Assert.Equal(25, update.TripEtaMinutes);
+        Assert.Equal("SFO Terminal 2", update.DestinationName);
+        Assert.Equal(37.6213, update.DestinationLat);
+        Assert.Equal(-122.3790, update.DestinationLng);
+    }
+
+    [Fact]
+    public void OmitsUnknownTripFieldsSoTheDisplayKeepsWhatItKnows()
+    {
+        var json = JsonSerializer.Serialize(EvenHubRideUpdate.FromRideData(SampleRide("in_progress")));
+
+        Assert.DoesNotContain("tripEtaMinutes", json);
+        Assert.DoesNotContain("destinationName", json);
+        Assert.DoesNotContain("destinationLat", json);
     }
 
     [Fact]

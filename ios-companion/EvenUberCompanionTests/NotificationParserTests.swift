@@ -212,6 +212,8 @@ final class NotificationParserTests: XCTestCase {
             ("Your driver has arrived", .arrived),
             ("Sarah is here — meet at the pickup point", .arrived),
             ("Your driver is waiting outside", .arrived),
+            ("Your trip has started", .ontrip),
+            ("Enjoy your ride with John", .ontrip),
             ("Your trip is complete", .completed),
             ("Rate your trip with John", .completed),
             ("Your trip receipt is ready", .completed),

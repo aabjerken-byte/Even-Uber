@@ -1,7 +1,7 @@
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
 import { glassesLog } from './log'
 import { RideData } from '../models/RideData'
-import { rangeRingMinutes } from '../models/rideTiming'
+import { mapPoints, rangeRingMinutes } from '../models/rideTiming'
 import { acquireBridge } from './bridge'
 import { CONTAINERS, ContainerKey } from './constants'
 import { GlassesText, diffText, formatIdle, formatRide } from './format'
@@ -131,20 +131,21 @@ export class GlassesRenderer {
     if (!this.bridge) return
 
     const rangeMinutes = ride ? rangeRingMinutes(ride) ?? undefined : undefined
+    const points = ride ? mapPoints(ride) : null
 
-    const key = ride
-      ? [ride.requesterLat, ride.requesterLng, ride.driverLat, ride.driverLng, rangeMinutes].join(',')
+    const key = points
+      ? [points.youLat, points.youLng, points.targetLat, points.targetLng, rangeMinutes].join(',')
       : 'idle'
 
     if (key === this.lastMapKey) return
     this.lastMapKey = key
 
-    const bytes = ride
+    const bytes = points
       ? renderMapBytes({
-          requesterLat: ride.requesterLat,
-          requesterLng: ride.requesterLng,
-          driverLat: ride.driverLat,
-          driverLng: ride.driverLng,
+          requesterLat: points.youLat,
+          requesterLng: points.youLng,
+          driverLat: points.targetLat,
+          driverLng: points.targetLng,
           rangeMinutes
         })
       : null

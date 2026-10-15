@@ -105,6 +105,31 @@ describe('validateLayout', () => {
 })
 
 describe('formatRide', () => {
+  it('switches to destination, distance and arrival time on a trip', () => {
+    const text = formatRide(ride({
+      status: 'ontrip',
+      destinationName: 'SFO Terminal 2',
+      tripEtaMinutes: 25,
+      tripRemainingMiles: 12.4
+    }), T0)
+    const arrival = new Date(T0 + 25 * 60_000)
+    const clock = `${arrival.getHours() % 12 || 12}:${String(arrival.getMinutes()).padStart(2, '0')}`
+    expect(text.driver).toBe('To SFO Terminal 2')
+    expect(text.vehicle).toBe('Silver Toyota Prius')
+    expect(text.plate).toBe('12.4 mi left')
+    expect(text.eta).toBe('25 MIN')
+    expect(text.status).toContain(`ON TRIP · ${clock}`)
+  })
+
+  it('degrades to ON TRIP when nothing about the trip is known', () => {
+    const text = formatRide(ride({ status: 'ontrip' }), T0)
+    expect(text.driver).toBe('John D. ★4.9')
+    expect(text.plate).toBe('Plate ABC123')
+    expect(text.eta).toBe('--')
+    expect(text.status).toBe('ON TRIP')
+  })
+
+
   it('builds the ride lines', () => {
     const text = formatRide(ride(), T0)
     expect(text.driver).toBe('John D. ★4.9')

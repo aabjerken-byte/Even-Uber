@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { RideData, ApiResponse, HealthResponse, isTerminalStatus } from './src/models/RideData'
+import { RideData, ApiResponse, HealthResponse } from './src/models/RideData'
 import { isRideStale } from './src/models/rideTiming'
 import { mergeRide } from './src/models/rideMerge'
 
@@ -52,10 +52,10 @@ app.post('/api/ride-update', (req: Request, res: Response) => {
   try {
     const incoming: RideData = req.body
 
-    // Transitions — "arriving now", "has arrived", "trip complete" — carry a
-    // status and often nothing else; that's their whole point. Only a plain
-    // en-route update must identify a driver and quote an ETA.
-    const transition = isTerminalStatus(incoming.status) || incoming.status === 'arriving'
+    // Transitions — "arriving now", "has arrived", "trip started", "trip
+    // complete" — carry a status and often nothing else; that's their whole
+    // point. Only a plain en-route update must identify a driver and quote an ETA.
+    const transition = incoming.status !== undefined && incoming.status !== 'enroute'
     if (!transition && (!incoming.driverName || incoming.etaMinutes === undefined)) {
       return res.status(400).json({
         status: 'error',

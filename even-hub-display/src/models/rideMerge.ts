@@ -39,6 +39,26 @@ export function mergeRide(previous: RideData | null, incoming: RideData): RideDa
     requesterLng: preferIncoming(incoming.requesterLng, previous.requesterLng),
     // An en-route update with no ETA keeps the previous one rather than
     // resetting the countdown to zero.
-    etaMinutes: incoming.etaMinutes || previous.etaMinutes
+    etaMinutes: incoming.etaMinutes || previous.etaMinutes,
+    destinationName: preferIncoming(incoming.destinationName, previous.destinationName),
+    destinationLat: preferIncoming(incoming.destinationLat, previous.destinationLat),
+    destinationLng: preferIncoming(incoming.destinationLng, previous.destinationLng),
+    tripRemainingMiles: preferIncoming(incoming.tripRemainingMiles, previous.tripRemainingMiles),
+    tripEtaMinutes: incoming.tripEtaMinutes ?? carryTripEta(previous, incoming.timestamp)
   }
+}
+
+/**
+ * Carry a trip ETA across an update that doesn't restate it.
+ *
+ * The countdown runs from the ride's timestamp, and the merged ride takes the
+ * newer one — so keeping the old figure as-is would wind the clock back up by
+ * however long passed between the two updates. Re-base it instead.
+ */
+function carryTripEta(previous: RideData, nextTimestamp: string): number | undefined {
+  if (previous.tripEtaMinutes === undefined || previous.tripEtaMinutes === null) return undefined
+  const then = Date.parse(previous.timestamp)
+  const now = Date.parse(nextTimestamp)
+  if (!Number.isFinite(then) || !Number.isFinite(now)) return previous.tripEtaMinutes
+  return Math.max(0, previous.tripEtaMinutes - Math.max(0, now - then) / 60_000)
 }

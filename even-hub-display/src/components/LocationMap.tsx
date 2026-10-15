@@ -1,4 +1,5 @@
 import { RideStatus } from '../models/RideData'
+import { formatDistance, haversineMiles, isCoord } from '../models/geo'
 
 export interface LocationMapProps {
   driverLat?: number
@@ -11,6 +12,10 @@ export interface LocationMapProps {
    */
   rangeMinutes?: number
   status?: RideStatus
+  /** Label for the second point — the driver by default, the drop-off on a trip. */
+  targetLabel?: string
+  /** Replaces the computed "X away" line, e.g. "4.2 mi to drop-off". */
+  distanceCaption?: string
 }
 
 /** What to say under the map when there is no range ring to describe. */
@@ -20,6 +25,8 @@ function positionCaption(status?: RideStatus): string {
       return '📍 Driver pulling up'
     case 'arrived':
       return '📍 Driver at pickup'
+    case 'ontrip':
+      return '📍 On trip'
     default:
       return '📍 Your position'
   }
@@ -34,42 +41,6 @@ const PADDING = 12
  * distance. Only used for the range ring, never to place a driver pin.
  */
 const ASSUMED_CITY_SPEED_MPH = 20
-
-const EARTH_RADIUS_MILES = 3958.8
-
-/** A coordinate of exactly 0 is valid (Gulf of Guinea) — don't treat it as absent. */
-function isCoord(value?: number): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
-}
-
-/**
- * Great-circle distance in miles.
- *
- * The previous implementation treated a degree of longitude as equal to a
- * degree of latitude, which overstates east-west distance by ~21% at San
- * Francisco's latitude and by more the further from the equator you go.
- */
-export function haversineMiles(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1)
-  const dLng = toRad(lng2 - lng1)
-
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
-
-  return 2 * EARTH_RADIUS_MILES * Math.asin(Math.min(1, Math.sqrt(a)))
-}
-
-function formatDistance(miles: number): string {
-  if (miles < 0.1) return `${Math.round(miles * 5280)} ft`
-  return `${miles.toFixed(1)} mi`
-}
 
 function GridBackground() {
   return (
@@ -110,7 +81,9 @@ export default function LocationMap({
   requesterLat,
   requesterLng,
   rangeMinutes,
-  status
+  status,
+  targetLabel = 'Driver',
+  distanceCaption
 }: LocationMapProps) {
   const hasRequester = isCoord(requesterLat) && isCoord(requesterLng)
   const hasDriver = isCoord(driverLat) && isCoord(driverLng)
@@ -174,12 +147,12 @@ export default function LocationMap({
             fill="#00FF00"
           />
           <text x={driverX - 8} y={driverY + 12} fill="#00FF00" fontSize="8">
-            Driver
+            {targetLabel}
           </text>
         </svg>
 
         <div className="map-info">
-          <p className="distance">📏 {formatDistance(distance)} away</p>
+          <p className="distance">📏 {distanceCaption ?? `${formatDistance(distance)} away`}</p>
         </div>
       </div>
     )
@@ -252,7 +225,7 @@ export default function LocationMap({
               <p className="map-note">Range estimated from ETA · exact position unavailable</p>
             </>
           ) : (
-            <p className="distance">{positionCaption(status)}</p>
+            <p className="distance">{distanceCaption ? `📏 ${distanceCaption}` : positionCaption(status)}</p>
           )}
         </div>
       </div>
@@ -270,7 +243,7 @@ export default function LocationMap({
           fill="#00FF00"
         />
         <text x={MAP_WIDTH / 2 - 8} y={MAP_HEIGHT / 2 + 14} fill="#00FF00" fontSize="8">
-          Driver
+          {targetLabel}
         </text>
       </svg>
       <div className="map-info">

@@ -8,12 +8,17 @@ export type RideStatus =
   | 'enroute'    // driver on the way, ETA meaningful
   | 'arriving'   // pulling up now
   | 'arrived'    // waiting at the pickup point
+  | 'ontrip'     // rider picked up, heading to the destination
   | 'completed'  // trip finished
   | 'cancelled'  // ride cancelled
 
-/** Statuses after which the card should be cleared rather than kept alive. */
+/**
+ * Statuses after which the card should be cleared rather than kept alive.
+ *
+ * 'arrived' is deliberately not here: the trip starts next, and clearing the
+ * card a minute after pickup left nothing on the glasses for the ride itself.
+ */
 export const TERMINAL_RIDE_STATUSES: readonly RideStatus[] = [
-  'arrived',
   'completed',
   'cancelled'
 ]
@@ -40,6 +45,14 @@ export interface RideData {
   requesterLat?: number
   requesterLng?: number
   timestamp: string
+  // On trip — all optional; the card degrades to "ON TRIP" without them
+  /** Minutes to the destination as of `timestamp`. */
+  tripEtaMinutes?: number
+  /** Route distance left as reported by the producer, in miles. */
+  tripRemainingMiles?: number
+  destinationName?: string
+  destinationLat?: number
+  destinationLng?: number
   // Advanced features
   driverPhone?: string
   driverAvatar?: string

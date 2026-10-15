@@ -31,6 +31,26 @@ public class RideData
 
     [JsonPropertyName("requester_location")]
     public LocationInfo? RequesterLocation { get; set; }
+
+    /// <summary>Drop-off point, with Uber's ETA to it once the trip is under way.</summary>
+    [JsonPropertyName("destination")]
+    public DestinationInfo? Destination { get; set; }
+}
+
+public class DestinationInfo
+{
+    [JsonPropertyName("latitude")]
+    public double? Latitude { get; set; }
+
+    [JsonPropertyName("longitude")]
+    public double? Longitude { get; set; }
+
+    /// <summary>Minutes to the destination, as Uber reports it during the trip.</summary>
+    [JsonPropertyName("eta")]
+    public int? EtaMinutes { get; set; }
+
+    [JsonPropertyName("address")]
+    public string? Address { get; set; }
 }
 
 public class DriverInfo

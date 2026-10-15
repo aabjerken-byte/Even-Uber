@@ -8,14 +8,17 @@ enum RideStatus: String, Codable {
     case enroute
     case arriving
     case arrived
+    case ontrip
     case completed
     case cancelled
 
     /// Statuses after which the display should wind the card down.
     var isTerminal: Bool {
         switch self {
-        case .arrived, .completed, .cancelled: return true
-        case .enroute, .arriving: return false
+        case .completed, .cancelled: return true
+        // "arrived" leads into the trip; ending the card there left nothing on
+        // the glasses for the ride itself.
+        case .enroute, .arriving, .arrived, .ontrip: return false
         }
     }
 }

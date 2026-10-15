@@ -98,6 +98,8 @@ enum NotificationParser {
                          "you've arrived", "you have arrived", "thanks for riding",
                          "rate your trip", "rate your driver", "trip receipt",
                          "how was your trip", "trip summary"]
+        let ontrip = ["trip has started", "your trip has begun", "enjoy your ride",
+                      "you're on your way", "you are on your way"]
         let arrived = ["has arrived", "is here", "is waiting", "arrived at",
                        "your driver is outside", "meet your driver outside"]
         let arriving = ["is arriving now", "arriving now", "is pulling up",
@@ -105,6 +107,7 @@ enum NotificationParser {
 
         if cancelled.contains(where: haystack.contains) { return .cancelled }
         if completed.contains(where: haystack.contains) { return .completed }
+        if ontrip.contains(where: haystack.contains) { return .ontrip }
         if arrived.contains(where: haystack.contains) { return .arrived }
         if arriving.contains(where: haystack.contains) { return .arriving }
         return .enroute
