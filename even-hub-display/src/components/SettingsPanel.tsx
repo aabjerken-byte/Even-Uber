@@ -1,3 +1,4 @@
+import appInfo from '../../app.json'
 import '../styles/SettingsPanel.css'
 
 interface SettingsPanelProps {
@@ -108,7 +109,7 @@ export default function SettingsPanel({
 
           <div className="info-item">
             <span className="label">Version</span>
-            <span className="value">1.0.0</span>
+            <span className="value">{appInfo.version}</span>
           </div>
 
           <div className="info-item">

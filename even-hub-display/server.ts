@@ -2,8 +2,7 @@ import express, { Express, Request, Response } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { RideData, ApiResponse, HealthResponse } from './src/models/RideData'
-import { isRideStale } from './src/models/rideTiming'
-import { mergeRide } from './src/models/rideMerge'
+import { RideStore } from './src/models/rideStore'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,9 +14,8 @@ const PORT = 3000
 app.use(express.json())
 app.use(express.static(path.join(__dirname, 'dist')))
 
-// In-memory store for current ride (in production, use WebSocket)
-let currentRide: RideData | null = null
-let lastUpdate: Date | null = null
+// The active ride. Same store, rules and expiry as the standalone app uses.
+const store = new RideStore()
 
 // CORS headers
 app.use((req: Request, res: Response, next) => {
@@ -47,56 +45,27 @@ app.get('/health', (req: Request, res: Response) => {
   res.json(response)
 })
 
-// Receive ride update from iOS companion app
+// Receive ride update from iOS companion app (or curl, or the Uber backend)
 app.post('/api/ride-update', (req: Request, res: Response) => {
   try {
-    const incoming: RideData = req.body
+    const result = store.apply(req.body as RideData)
 
-    // Transitions — "arriving now", "has arrived", "trip started", "trip
-    // complete" — carry a status and often nothing else; that's their whole
-    // point. Only a plain en-route update must identify a driver and quote an ETA.
-    const transition = incoming.status !== undefined && incoming.status !== 'enroute'
-    if (!transition && (!incoming.driverName || incoming.etaMinutes === undefined)) {
-      return res.status(400).json({
-        status: 'error',
-        error: 'Missing required fields: driverName, etaMinutes'
-      })
+    if (result.status === 'invalid') {
+      return res.status(400).json({ status: 'error', error: result.error })
+    }
+    if (result.status === 'ignored') {
+      console.log(`↩️ Ignoring update: ${result.reason}`)
+      return res.json({ status: 'ignored', message: result.reason })
     }
 
-    const existing = activeRide()
-
-    // A transition modifies the ride on screen; it never starts one. Post-trip
-    // notifications ("your receipt is ready", "rate your trip") keep arriving
-    // long after a trip ends, and without this a stray receipt would raise a
-    // blank "TRIP COMPLETE" card on the glasses out of nowhere.
-    if (transition && !existing && !incoming.driverName) {
-      console.log('↩️ Ignoring transition update with no active ride')
-      return res.json({
-        status: 'ignored',
-        message: 'No active ride to update'
-      })
-    }
-
-    const rideData = mergeRide(existing, incoming)
-
-    // Store the ride data
-    currentRide = rideData
-    lastUpdate = new Date()
-
-    console.log(`📤 Received ride update:`)
-    console.log(`   Status: ${rideData.status ?? 'enroute'}`)
-    console.log(`   Driver: ${rideData.driverName}`)
-    console.log(`   Rating: ${rideData.driverRating}★`)
-    console.log(`   Vehicle: ${rideData.vehicleColor} ${rideData.vehicleMake} ${rideData.vehicleModel}`)
-    console.log(`   Plate: ${rideData.licensePlate}`)
-    console.log(`   ETA: ${rideData.etaMinutes} minutes`)
+    const ride = result.ride
+    console.log(`📤 Ride update: ${ride.status ?? 'enroute'} · ${ride.driverName} · ETA ${ride.etaMinutes} min`)
 
     const response: ApiResponse<RideData> = {
       status: 'success',
       message: 'Ride data updated',
-      data: rideData
+      data: ride
     }
-
     res.json(response)
   } catch (error) {
     console.error('❌ Error processing ride update:', error)
@@ -107,27 +76,9 @@ app.post('/api/ride-update', (req: Request, res: Response) => {
   }
 })
 
-/**
- * Drop the stored ride once it goes stale, so the glasses stop showing a card
- * for a trip that ended long ago. Terminal rides linger briefly; en-route rides
- * survive a quiet spell but not an indefinite one.
- */
-function activeRide(): RideData | null {
-  if (!currentRide) return null
-
-  if (isRideStale(currentRide, Date.now(), lastUpdate?.getTime())) {
-    console.log('🕓 Clearing stale ride data')
-    currentRide = null
-    lastUpdate = null
-    return null
-  }
-
-  return currentRide
-}
-
 // Get current ride data (for debugging/testing)
 app.get('/api/ride', (req: Request, res: Response) => {
-  const ride = activeRide()
+  const ride = store.current()
 
   if (!ride) {
     return res.status(404).json({
@@ -146,8 +97,7 @@ app.get('/api/ride', (req: Request, res: Response) => {
 
 // Clear current ride (for testing)
 app.post('/api/ride-clear', (req: Request, res: Response) => {
-  currentRide = null
-  lastUpdate = null
+  store.clear()
 
   res.json({
     status: 'success',
@@ -157,12 +107,12 @@ app.post('/api/ride-clear', (req: Request, res: Response) => {
 
 // Get server status
 app.get('/api/status', (req: Request, res: Response) => {
-  const ride = activeRide()
+  const ride = store.current()
   res.json({
     status: 'ok',
     uptime: process.uptime(),
     hasActiveRide: !!ride,
-    lastUpdate: lastUpdate?.toISOString() || null,
+    lastUpdate: store.receivedAt() ? new Date(store.receivedAt()!).toISOString() : null,
     currentRide: ride
   })
 })

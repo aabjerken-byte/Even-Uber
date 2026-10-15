@@ -1,5 +1,9 @@
-import { useState, useEffect } from 'react'
-import { RideData, ApiResponse } from './models/RideData'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { RideData } from './models/RideData'
+import { SourceMode, applyUpdate, detectMode, fetchRide } from './rideSource'
+import { runDemoRide } from './demoRide'
+import { usePhoneLocation } from './glasses/usePhoneLocation'
+import { setLogRelay } from './glasses/log'
 import RideCard from './components/RideCard'
 import StatusView from './components/StatusView'
 import RideHistory from './components/RideHistory'
@@ -17,11 +21,6 @@ interface RideHistoryEntry {
 
 type AppView = 'ride' | 'history' | 'settings'
 
-// Same-origin: Vite proxies /api and /health to Express in dev, and Express
-// serves the built app in production. An absolute 127.0.0.1 URL broke as soon
-// as the page ran on the phone (inside the Even App), where 127.0.0.1 is the
-// phone itself.
-const SERVER_URL = ''
 const POLL_INTERVAL = 2000
 const STORAGE_KEY = 'even_uber_rides'
 const THEME_KEY = 'even_uber_theme'
@@ -34,6 +33,7 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [mode, setMode] = useState<SourceMode | null>(null)
 
   // Ride history state
   const [rideHistory, setRideHistory] = useState<RideHistoryEntry[]>([])
@@ -49,7 +49,28 @@ export default function App() {
   // Settings state
   // Mirror the current ride onto the G2 glasses. No-ops outside the Even App
   // WebView, so the browser preview is unaffected.
-  const glassesActive = useGlasses(rideData)
+  //
+  // The phone's live GPS is layered on at display time rather than stored, so
+  // it never fights with whatever the ride source holds.
+  const phoneLocation = usePhoneLocation()
+  const displayRide = useMemo<RideData | null>(
+    () => (rideData && phoneLocation
+      ? { ...rideData, phoneLat: phoneLocation.lat, phoneLng: phoneLocation.lng }
+      : rideData),
+    [rideData, phoneLocation]
+  )
+  const glassesActive = useGlasses(displayRide)
+
+  const stopDemo = useRef<(() => void) | null>(null)
+  useEffect(() => () => stopDemo.current?.(), [])
+  const startDemo = () => {
+    if (!mode) return
+    stopDemo.current?.()
+    stopDemo.current = runDemoRide(
+      (update) => void applyUpdate(mode, update),
+      phoneLocation
+    )
+  }
 
   const [pollInterval, setPollInterval] = useState(POLL_INTERVAL)
   const [showNotifications, setShowNotifications] = useState(true)
@@ -93,102 +114,81 @@ export default function App() {
     }
   }, [rideHistory])
 
-  // Main polling effect
+  // Work out where ride data lives: the dev server, or this page (.ehpk)
   useEffect(() => {
     console.log('🚀 Even Uber display app initializing...')
-    setIsReady(true)
-    setIsLoading(false)
+    detectMode().then((detected) => {
+      console.log(`📡 Ride source: ${detected}`)
+      setLogRelay(detected === 'server')
+      setMode(detected)
+      setIsReady(true)
+      setIsLoading(false)
+    })
+  }, [])
 
-    // Check server health on startup
-    const checkHealth = async () => {
+  // Main polling effect
+  useEffect(() => {
+    if (!mode) return
+
+    const tick = async () => {
       try {
-        const response = await fetch(`${SERVER_URL}/health`)
-        if (response.ok) {
-          console.log('🟢 Connected to Even Hub server')
-          setIsConnected(true)
-          setConnectionError(null)
-        } else {
-          setIsConnected(false)
-          setConnectionError(`Server returned ${response.status}`)
-        }
-      } catch (error) {
-        console.warn('⚠️ Server not responding:', error)
-        setIsConnected(false)
-        setConnectionError('Cannot reach server at ' + SERVER_URL)
-      }
-    }
+        const newRide = await fetchRide(mode)
+        setIsConnected(true)
+        setConnectionError(null)
 
-    checkHealth()
+        if (newRide) {
+          setRideData(newRide)
+          setLastUpdate(new Date())
 
-    // Set up polling interval
-    const poll = setInterval(async () => {
-      try {
-        const response = await fetch(`${SERVER_URL}/api/ride`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        })
-
-        if (response.ok) {
-          const apiResponse: ApiResponse<RideData> = await response.json()
-
-          if (apiResponse.data) {
-            const newRide = apiResponse.data
-            setRideData(newRide)
-            setLastUpdate(new Date())
-            setIsConnected(true)
-            setConnectionError(null)
-
-            // Track ride in history
-            if (!currentRideId || rideData?.driverName !== newRide.driverName) {
-              const rideId = `ride_${Date.now()}`
-              setCurrentRideId(rideId)
-              setRideHistory(prev => [
-                ...prev,
-                {
-                  id: rideId,
-                  data: newRide,
-                  startTime: new Date()
-                }
-              ])
-
-              if (showNotifications) {
-                console.log(`✅ New ride: ${newRide.driverName}`)
+          // Track ride in history
+          if (!currentRideId || rideData?.driverName !== newRide.driverName) {
+            const rideId = `ride_${Date.now()}`
+            setCurrentRideId(rideId)
+            setRideHistory(prev => [
+              ...prev,
+              {
+                id: rideId,
+                data: newRide,
+                startTime: new Date()
               }
+            ])
+
+            if (showNotifications) {
+              console.log(`✅ New ride: ${newRide.driverName}`)
             }
           }
-        } else {
-          // No active ride
-          if (rideData && currentRideId) {
-            // Mark ride as completed
-            setRideHistory(prev =>
-              prev.map(entry =>
-                entry.id === currentRideId
-                  ? {
-                      ...entry,
-                      endTime: new Date(),
-                      duration: Date.now() - entry.startTime.getTime()
-                    }
-                  : entry
-              )
+        } else if (rideData && currentRideId) {
+          // No active ride any more — mark it completed
+          setRideHistory(prev =>
+            prev.map(entry =>
+              entry.id === currentRideId
+                ? {
+                    ...entry,
+                    endTime: new Date(),
+                    duration: Date.now() - entry.startTime.getTime()
+                  }
+                : entry
             )
+          )
 
-            if (autoHideCompleted) {
-              setRideData(null)
-              setCurrentRideId(null)
-            }
-
-            console.log('🛑 Ride completed')
+          if (autoHideCompleted) {
+            setRideData(null)
+            setCurrentRideId(null)
           }
+
+          console.log('🛑 Ride completed')
         }
       } catch (error) {
         console.error('❌ Failed to fetch ride data:', error)
         setIsConnected(false)
         setConnectionError('Polling error: ' + (error instanceof Error ? error.message : 'Unknown'))
       }
-    }, pollInterval)
+    }
 
+    void tick()
+    const poll = setInterval(tick, pollInterval)
     return () => clearInterval(poll)
-  }, [currentRideId, rideData, pollInterval, showNotifications, autoHideCompleted])
+  }, [mode, currentRideId, rideData, pollInterval, showNotifications, autoHideCompleted])
 
   // Handle view navigation
   const handleViewChange = (view: AppView) => {
@@ -247,9 +247,9 @@ export default function App() {
           </div>
         ) : activeView === 'ride' ? (
           isReady && !rideData ? (
-            <StatusView lastUpdate={lastUpdate} />
+            <StatusView lastUpdate={lastUpdate} onSimulate={startDemo} />
           ) : isReady && rideData ? (
-            <RideCard data={rideData} />
+            <RideCard data={displayRide ?? rideData} />
           ) : (
             <div className="empty-state">
               <p>No active ride</p>
@@ -277,7 +277,7 @@ export default function App() {
           <div className="connection-status">
             <span className={`status-light ${isConnected ? 'connected' : 'disconnected'}`}></span>
             <span>
-              {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+              {mode === 'local' ? '📱 Running on phone' : isConnected ? '🟢 Connected' : '🔴 Disconnected'}
               {connectionError && ` (${connectionError})`}
             </span>
           </div>

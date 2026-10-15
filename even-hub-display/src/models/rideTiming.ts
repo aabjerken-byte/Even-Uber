@@ -143,11 +143,14 @@ export function rangeRingMinutes(ride: RideData, now: number = Date.now()): numb
 /**
  * Where the rider is right now.
  *
- * On a trip the rider is in the car, so the driver's position — when a
- * producer like the Uber API supplies it — is the best fix. Otherwise fall back
- * to the phone's own location.
+ * The phone's live GPS wins. Without it: on a trip the rider is in the car, so
+ * the driver's position (from the Uber API) is next best; otherwise the
+ * requester coordinates a producer sent.
  */
 export function currentPosition(ride: RideData): { lat: number; lng: number } | null {
+  if (isCoord(ride.phoneLat) && isCoord(ride.phoneLng)) {
+    return { lat: ride.phoneLat, lng: ride.phoneLng }
+  }
   if (ride.status === 'ontrip' && isCoord(ride.driverLat) && isCoord(ride.driverLng)) {
     return { lat: ride.driverLat, lng: ride.driverLng }
   }
@@ -249,9 +252,10 @@ export function mapPoints(ride: RideData): MapPoints {
       targetLabel: 'Drop-off'
     }
   }
+  const here = currentPosition(ride)
   return {
-    youLat: ride.requesterLat,
-    youLng: ride.requesterLng,
+    youLat: here?.lat,
+    youLng: here?.lng,
     targetLat: ride.driverLat,
     targetLng: ride.driverLng,
     targetLabel: 'Driver'

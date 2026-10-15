@@ -53,6 +53,13 @@ export interface RideData {
   destinationName?: string
   destinationLat?: number
   destinationLng?: number
+  /**
+   * The phone's own live position, from the Even App's location service.
+   * Display-side only — producers don't send it. Beats every other source for
+   * "where you are", since requester coordinates are the pickup point.
+   */
+  phoneLat?: number
+  phoneLng?: number
   // Advanced features
   driverPhone?: string
   driverAvatar?: string

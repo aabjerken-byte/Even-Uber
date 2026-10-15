@@ -24,6 +24,7 @@ export class GlassesRenderer {
   private started = false
   private lastText: GlassesText = {}
   private lastMapKey = ''
+  private unsubscribeEvents: (() => void) | null = null
 
   get isActive(): boolean {
     return this.started && this.bridge !== null
@@ -88,6 +89,7 @@ export class GlassesRenderer {
     }
 
     glassesLog('info', '🕶️ Glasses page created')
+    await this.listenForGestures()
     // Force a full paint on the next update.
     this.lastText = {}
     await this.update(null)
@@ -133,8 +135,11 @@ export class GlassesRenderer {
     const rangeMinutes = ride ? rangeRingMinutes(ride) ?? undefined : undefined
     const points = ride ? mapPoints(ride) : null
 
+    // Rounded to ~10 m: GPS jitter must not re-send the most expensive
+    // payload over Bluetooth every few seconds.
+    const round = (v?: number) => (v === undefined ? '' : v.toFixed(4))
     const key = points
-      ? [points.youLat, points.youLng, points.targetLat, points.targetLng, rangeMinutes].join(',')
+      ? [round(points.youLat), round(points.youLng), round(points.targetLat), round(points.targetLng), rangeMinutes].join(',')
       : 'idle'
 
     if (key === this.lastMapKey) return
@@ -173,7 +178,46 @@ export class GlassesRenderer {
   }
 
   /** Close the glasses page. */
+  /**
+   * Double-tap on the glasses closes the app, as it does in every other G2 app.
+   * Without a listener the gesture did nothing and the card had no way off.
+   */
+  private async listenForGestures(): Promise<void> {
+    if (!this.bridge) return
+    const { OsEventTypeList } = await import('@evenrealities/even_hub_sdk')
+
+    this.unsubscribeEvents?.()
+    this.unsubscribeEvents = this.bridge.onEvenHubEvent((event) => {
+      // Protobuf omits zero-value fields, so a plain tap (0) arrives with no
+      // eventType. Coalesce only when the envelope exists.
+      const sysType = event.sysEvent != null ? (event.sysEvent.eventType ?? 0) : null
+      const textType = event.textEvent != null ? (event.textEvent.eventType ?? 0) : null
+
+      if (sysType === OsEventTypeList.SYSTEM_EXIT_EVENT || sysType === OsEventTypeList.ABNORMAL_EXIT_EVENT) {
+        glassesLog('info', '👋 App closed by the system')
+        this.detach()
+        return
+      }
+
+      if (sysType === OsEventTypeList.DOUBLE_CLICK_EVENT || textType === OsEventTypeList.DOUBLE_CLICK_EVENT) {
+        glassesLog('info', '👋 Double-tap — closing')
+        const bridge = this.bridge
+        this.detach()
+        void bridge?.shutDownPageContainer(1)
+      }
+    })
+  }
+
+  /** Stop listening and stop pushing updates, without touching the page. */
+  private detach(): void {
+    this.unsubscribeEvents?.()
+    this.unsubscribeEvents = null
+    this.bridge = null
+  }
+
   async stop(): Promise<void> {
+    this.unsubscribeEvents?.()
+    this.unsubscribeEvents = null
     if (this.bridge) {
       try {
         await this.bridge.shutDownPageContainer(0)

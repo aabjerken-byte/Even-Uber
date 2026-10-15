@@ -28,12 +28,21 @@ export function isEvenAppWebView(): boolean {
   )
 }
 
+let pending: Promise<EvenAppBridge | null> | null = null
+
 /**
  * Resolve the bridge, or null when unavailable.
  *
  * Never throws and never hangs — callers treat null as "run as a web page".
+ * Shared: the glasses renderer and the location hook both need it, and
+ * there's only one host to wait for.
  */
-export async function acquireBridge(): Promise<EvenAppBridge | null> {
+export function acquireBridge(): Promise<EvenAppBridge | null> {
+  pending ??= connect()
+  return pending
+}
+
+async function connect(): Promise<EvenAppBridge | null> {
   // The host may inject `flutter_inappwebview` after our first script runs, so
   // its absence at startup is not proof we're in a plain browser. Always wait
   // (bounded by the timeout) rather than bailing on an early check.

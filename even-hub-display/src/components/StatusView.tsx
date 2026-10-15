@@ -1,11 +1,13 @@
 export interface StatusViewProps {
   lastUpdate?: Date | null
+  /** Starts a scripted demo ride; shown when provided. */
+  onSimulate?: () => void
 }
 
 /**
  * Waiting state - displays before any ride data arrives
  */
-export default function StatusView({ lastUpdate }: StatusViewProps) {
+export default function StatusView({ lastUpdate, onSimulate }: StatusViewProps) {
   return (
     <div className="status-view">
       <div className="status-content">
@@ -19,6 +21,11 @@ export default function StatusView({ lastUpdate }: StatusViewProps) {
         <p className="status-help">
           Order a ride in the Uber app to get started
         </p>
+        {onSimulate && (
+          <button className="nav-btn" onClick={onSimulate}>
+            ▶️ Simulate a ride
+          </button>
+        )}
       </div>
 
       <div className="status-info">
