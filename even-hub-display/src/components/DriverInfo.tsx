@@ -1,3 +1,5 @@
+import { formatRating } from '../models/RideData'
+
 export interface DriverInfoProps {
   name: string
   rating: number
@@ -14,7 +16,7 @@ export default function DriverInfo({ name, rating, vehicle, plate }: DriverInfoP
     <div className="driver-info">
       <div className="driver-name-rating">
         <h1>{name}</h1>
-        <div className="rating">⭐ {rating.toFixed(1)}</div>
+        <div className="rating">⭐ {formatRating(rating)}</div>
       </div>
 
       <div className="vehicle-info">

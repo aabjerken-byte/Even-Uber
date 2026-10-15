@@ -1,6 +1,6 @@
 {
   "name": "even-uber-display",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Even Hub display app for Even Uber - ride tracking on G2 AR glasses",
   "main": "dist/index.js",

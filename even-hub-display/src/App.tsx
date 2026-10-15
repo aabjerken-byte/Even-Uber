@@ -5,6 +5,7 @@ import { runDemoRide } from './demoRide'
 import { usePhoneLocation } from './glasses/usePhoneLocation'
 import { setLogRelay } from './glasses/log'
 import RideCard from './components/RideCard'
+import PasteFromUber from './components/PasteFromUber'
 import StatusView from './components/StatusView'
 import RideHistory from './components/RideHistory'
 import SettingsPanel from './components/SettingsPanel'
@@ -247,9 +248,15 @@ export default function App() {
           </div>
         ) : activeView === 'ride' ? (
           isReady && !rideData ? (
-            <StatusView lastUpdate={lastUpdate} onSimulate={startDemo} />
+            <>
+              {mode && <PasteFromUber mode={mode} currentRide={null} />}
+              <StatusView lastUpdate={lastUpdate} onSimulate={startDemo} />
+            </>
           ) : isReady && rideData ? (
-            <RideCard data={displayRide ?? rideData} />
+            <>
+              {mode && <PasteFromUber mode={mode} currentRide={rideData} />}
+              <RideCard data={displayRide ?? rideData} />
+            </>
           ) : (
             <div className="empty-state">
               <p>No active ride</p>

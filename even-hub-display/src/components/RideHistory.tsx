@@ -1,4 +1,4 @@
-import { RideData } from '../models/RideData'
+import { RideData, formatRating } from '../models/RideData'
 import '../styles/RideHistory.css'
 
 interface RideHistoryEntry {
@@ -83,7 +83,7 @@ export default function RideHistory({ rides, onClear }: RideHistoryProps) {
                 <div className="ride-info">
                   <div className="driver-section">
                     <div className="driver-name">{ride.data.driverName}</div>
-                    <div className="driver-rating">⭐ {ride.data.driverRating.toFixed(1)}</div>
+                    <div className="driver-rating">⭐ {formatRating(ride.data.driverRating)}</div>
                   </div>
 
                   <div className="vehicle-section">

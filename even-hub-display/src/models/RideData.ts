@@ -100,3 +100,9 @@ export interface HealthResponse {
   uptime?: number
   timestamp?: string
 }
+
+/** "4.95", "4.9", "5.0" — Uber shows two decimals; rounding 4.95 up to 5.0 overstates it. */
+export function formatRating(rating: number): string {
+  const two = rating.toFixed(2)
+  return two.endsWith('0') ? rating.toFixed(1) : two
+}

@@ -1,4 +1,4 @@
-import { RideData } from '../models/RideData'
+import { RideData, formatRating } from '../models/RideData'
 import {
   computeEta,
   formatClock,
@@ -47,7 +47,7 @@ function tidy(text: string): string {
 export function formatRide(ride: RideData, now: number = Date.now()): GlassesText {
   const eta = computeEta(ride, now)
 
-  const rating = ride.driverRating > 0 ? ` ★${ride.driverRating.toFixed(1)}` : ''
+  const rating = ride.driverRating > 0 ? ` ★${formatRating(ride.driverRating)}` : ''
   const driver = tidy(`${ride.driverName}${rating}`)
 
   const vehicle = tidy(`${ride.vehicleColor} ${ride.vehicleMake} ${ride.vehicleModel}`)
