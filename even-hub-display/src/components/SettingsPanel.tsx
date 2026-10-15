@@ -113,7 +113,7 @@ export default function SettingsPanel({
 
           <div className="info-item">
             <span className="label">Server URL</span>
-            <span className="value">http://127.0.0.1:3000</span>
+            <span className="value">{window.location.origin}</span>
           </div>
 
           <div className="info-item">

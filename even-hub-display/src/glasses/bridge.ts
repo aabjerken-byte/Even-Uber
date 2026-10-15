@@ -1,4 +1,5 @@
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
+import { glassesLog } from './log'
 
 /**
  * Acquiring the Even App bridge, safely.
@@ -33,10 +34,13 @@ export function isEvenAppWebView(): boolean {
  * Never throws and never hangs — callers treat null as "run as a web page".
  */
 export async function acquireBridge(): Promise<EvenAppBridge | null> {
-  if (!isEvenAppWebView()) {
-    console.info('ℹ️ Not running in Even App WebView — glasses output disabled')
-    return null
-  }
+  // The host may inject `flutter_inappwebview` after our first script runs, so
+  // its absence at startup is not proof we're in a plain browser. Always wait
+  // (bounded by the timeout) rather than bailing on an early check.
+  glassesLog('info', '🔌 Acquiring Even App bridge', {
+    webViewAtStartup: isEvenAppWebView(),
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
+  })
 
   try {
     const { waitForEvenAppBridge } = await import('@evenrealities/even_hub_sdk')
@@ -48,13 +52,16 @@ export async function acquireBridge(): Promise<EvenAppBridge | null> {
     const bridge = await Promise.race([waitForEvenAppBridge(), timeout])
 
     if (!bridge) {
-      console.warn(`⚠️ Even App bridge did not become ready within ${BRIDGE_TIMEOUT_MS}ms`)
+      glassesLog('info', `ℹ️ No Even App bridge within ${BRIDGE_TIMEOUT_MS}ms — glasses output disabled`, {
+        webViewNow: isEvenAppWebView()
+      })
       return null
     }
 
+    glassesLog('info', '✅ Even App bridge ready')
     return bridge
   } catch (error) {
-    console.warn('⚠️ Failed to load the Even Hub SDK:', error)
+    glassesLog('warn', '⚠️ Failed to load the Even Hub SDK', error)
     return null
   }
 }

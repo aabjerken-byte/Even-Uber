@@ -27,6 +27,13 @@ app.use((req: Request, res: Response, next) => {
   next()
 })
 
+// Glasses diagnostics from the Even App WebView, whose console we can't see
+app.post('/api/debug-log', (req: Request, res: Response) => {
+  const { level, message, detail } = req.body ?? {}
+  console.log(`[glasses:${level ?? 'info'}] ${message ?? ''}${detail ? ` ${detail}` : ''}`)
+  res.status(204).end()
+})
+
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   const response: ApiResponse<HealthResponse> = {

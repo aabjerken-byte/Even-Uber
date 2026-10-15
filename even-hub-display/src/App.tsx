@@ -17,7 +17,11 @@ interface RideHistoryEntry {
 
 type AppView = 'ride' | 'history' | 'settings'
 
-const SERVER_URL = 'http://127.0.0.1:3000'
+// Same-origin: Vite proxies /api and /health to Express in dev, and Express
+// serves the built app in production. An absolute 127.0.0.1 URL broke as soon
+// as the page ran on the phone (inside the Even App), where 127.0.0.1 is the
+// phone itself.
+const SERVER_URL = ''
 const POLL_INTERVAL = 2000
 const STORAGE_KEY = 'even_uber_rides'
 const THEME_KEY = 'even_uber_theme'

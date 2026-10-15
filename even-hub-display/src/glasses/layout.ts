@@ -54,7 +54,6 @@ export function buildPageLayout(): PageLayout {
 
   const textObject: TextSpec[] = [
     {
-      ...CONTAINERS.driver,
       containerID: CONTAINERS.driver.id,
       containerName: CONTAINERS.driver.name,
       xPosition: pad,

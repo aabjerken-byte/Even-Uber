@@ -1,4 +1,5 @@
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
+import { glassesLog } from './log'
 import { RideData } from '../models/RideData'
 import { rangeRingMinutes } from '../models/rideTiming'
 import { acquireBridge } from './bridge'
@@ -40,7 +41,7 @@ export class GlassesRenderer {
     const errors = validateLayout(layout)
     if (errors.length > 0) {
       // Fail loudly here — the SDK would only answer `invalid`, with no detail.
-      console.error('❌ Invalid glasses layout:', errors)
+      glassesLog('error', '❌ Invalid glasses layout', errors)
       this.bridge = null
       return false
     }
@@ -53,30 +54,40 @@ export class GlassesRenderer {
       const {
         CreateStartUpPageContainer,
         ImageContainerProperty,
+        RebuildPageContainer,
         StartUpPageCreateResult,
         TextContainerProperty
       } = await import('@evenrealities/even_hub_sdk')
 
+      const page = {
+        containerTotalNum: layout.containerTotalNum,
+        textObject: layout.textObject.map((t) => new TextContainerProperty(t)),
+        imageObject: layout.imageObject.map((i) => new ImageContainerProperty(i))
+      }
+
       const result = await this.bridge.createStartUpPageContainer(
-        new CreateStartUpPageContainer({
-          containerTotalNum: layout.containerTotalNum,
-          textObject: layout.textObject.map((t) => new TextContainerProperty(t)),
-          imageObject: layout.imageObject.map((i) => new ImageContainerProperty(i))
-        })
+        new CreateStartUpPageContainer(page)
       )
 
       if (result !== StartUpPageCreateResult.success) {
-        console.error('❌ createStartUpPageContainer failed:', result)
-        this.bridge = null
-        return false
+        // The host allows one startup page per app session and answers
+        // `invalid` to any further create — which every page reload (and React
+        // StrictMode's double mount) triggers. Replace the existing page instead.
+        const rebuilt = await this.bridge.rebuildPageContainer(new RebuildPageContainer(page))
+        if (!rebuilt) {
+          glassesLog('error', '❌ Glasses page create and rebuild both failed', result)
+          this.bridge = null
+          return false
+        }
+        glassesLog('info', '♻️ Startup page already existed — rebuilt it')
       }
     } catch (error) {
-      console.error('❌ Could not create the glasses page:', error)
+      glassesLog('error', '❌ Could not create the glasses page', error)
       this.bridge = null
       return false
     }
 
-    console.info('🕶️ Glasses page created')
+    glassesLog('info', '🕶️ Glasses page created')
     // Force a full paint on the next update.
     this.lastText = {}
     await this.update(null)
@@ -104,7 +115,7 @@ export class GlassesRenderer {
           })
         )
       } catch (error) {
-        console.warn(`⚠️ Failed to update "${container.name}":`, error)
+        glassesLog('warn', `⚠️ Failed to update "${container.name}":`, error)
       }
     }
 
@@ -153,10 +164,10 @@ export class GlassesRenderer {
       )
 
       if (result !== ImageRawDataUpdateResult.success) {
-        console.warn('⚠️ Map image update failed:', result)
+        glassesLog('warn', '⚠️ Map image update failed', result)
       }
     } catch (error) {
-      console.warn('⚠️ Map image update threw:', error)
+      glassesLog('warn', '⚠️ Map image update threw', error)
     }
   }
 
@@ -166,7 +177,7 @@ export class GlassesRenderer {
       try {
         await this.bridge.shutDownPageContainer(0)
       } catch (error) {
-        console.warn('⚠️ Failed to close the glasses page:', error)
+        glassesLog('warn', '⚠️ Failed to close the glasses page', error)
       }
     }
     this.bridge = null

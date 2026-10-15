@@ -8,6 +8,8 @@
     "dev": "concurrently -n vite,server \"npm:dev:vite\" \"npm:dev:server\" --kill-others",
     "dev:vite": "vite",
     "dev:server": "tsx watch server.ts",
+    "dev:glasses": "concurrently -n vite,server \"vite --host 0.0.0.0\" \"npm:dev:server\" --kill-others",
+    "qr": "evenhub qr --http --port 5173",
     "build": "npm run type-check && vite build",
     "preview": "vite preview",
     "start": "tsx server.ts",
@@ -23,6 +25,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@evenrealities/evenhub-cli": "^0.1.14",
     "@types/express": "^4.17.17",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",

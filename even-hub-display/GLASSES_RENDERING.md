@@ -105,23 +105,33 @@ Every update crosses a Bluetooth LE link, so:
 - The map image is re-sent only when the coordinates or ETA actually change.
   It is by far the most expensive payload.
 
-## ⚠️ Not verified on hardware
+## ✅ Verified on hardware (G2 + iPhone, October 2026)
 
-This was built against the SDK's types and documentation without a G2 to test
-on. Two things need confirming on a real device:
+- **Image byte format:** 8-bit grayscale (`RASTER_FORMAT = 'grayscale'`) renders
+  correctly. The PNG path is not needed.
+- **Text sizing:** the current `MAX_CHARS` budgets fit — no clipping or wrapping
+  on the ride card.
+- **Lifecycle:** en route → arrived (range ring removed) → trip complete → idle
+  all render as expected.
 
-1. **Image byte format.** `RASTER_FORMAT` in `rasterize.ts` currently sends 8-bit
-   grayscale, one byte per pixel, which matches the README's annotation of
-   `imageData` as "grayscale bytes". But `ImageRawDataUpdateResult` includes an
-   `imageToGray4Failed` case, implying the host converts an encoded image
-   itself and would rather receive PNG. Both are implemented — flip the constant
-   if grayscale is rejected.
+Two host behaviours the SDK's validator and docs don't tell you:
 
-2. **Text sizing.** `MAX_CHARS` in `format.ts` is a conservative guess; the host
-   chooses the font, so the real character budget per container is unknown.
-   Truncation is safer than letting the host clip mid-glyph, but the numbers
-   deserve tuning once you can see them.
+1. **Unknown fields make the whole page `invalid`.** A stray `id`/`name` on one
+   text container (from an object spread) passed `validateEvenHubPageContainer`
+   but the host rejected the page. Pass only the documented properties.
+2. **One startup page per session.** A second `createStartUpPageContainer` —
+   from a page reload, HMR, or React StrictMode's double mount — returns
+   `invalid`. `renderer.ts` falls back to `rebuildPageContainer` with the same
+   layout.
 
-Everything that can be checked without hardware is covered by
-`glasses.test.ts` — layout validity against all documented limits, text
-formatting and truncation, diffing, and the grayscale conversion.
+## Testing on the glasses
+
+```bash
+npm run dev:glasses   # Vite on 0.0.0.0:5173, API on 127.0.0.1:3000 (proxied)
+npm run qr            # QR for http://<this machine's LAN IP>:5173 — scan in the Even App
+```
+
+Phone and PC must share a network; Windows may ask to allow Node.js through the
+firewall. The WebView's console isn't visible, so glasses log lines are also
+POSTed to `/api/debug-log` and printed by the server (`[glasses:info] …`).
+Push test rides with `curl` to `/api/ride-update` as in the README.
